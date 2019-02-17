@@ -169,11 +169,7 @@
                 <div class="col-md-6 col-sm-6 col-xs-6">
                   <div class="form-group">
                     <label class="pull-left">Birthday</label>
-                    <input
-                      type="date"
-                      class="form-control"
-                      v-model="newApp.date_of_birth"
-                    />
+                    <dateTime v-model="newApp.date_of_birth"></dateTime>
                   </div>
                 </div>
                 <div class="col-md-6 col-sm-6 col-xs-6">
@@ -389,11 +385,7 @@
                 <div class="col-md-6 col-sm-6 col-xs-6">
                   <div class="form-group">
                     <label class="pull-left">Birthday</label>
-                    <input
-                      type="date"
-                      class="form-control"
-                      v-model="review.date_of_birth"
-                    />
+                    <dateTime v-model="review.date_of_birth"></dateTime>
                   </div>
                 </div>
                 <div class="col-md-6 col-sm-6 col-xs-6">
@@ -523,6 +515,7 @@ import vuetableBootstrapMixin from "../../../mixins/VuetableBootstrapMixin";
 import applicationApi from "../../../endpoint/ApplicationApi";
 import ApplicationStatus from "../model/ApplicationStatus";
 import ScoresApi from "@/endpoint/ScoresApi";
+import dateTime from "../../dateTimePicker/DateTimePicker";
 
 let reviewActionField = {
   name: "__slot:review_actions",
@@ -540,6 +533,7 @@ export default {
   mixins: [utilMixin, vuetableBootstrapMixin],
   components: {
     Vuetable,
+    dateTime,
     VuetablePagination,
     "b-modal": bModal
   },
@@ -560,6 +554,7 @@ export default {
         newEnrolled: 0,
         newApplication: 0
       },
+      newScore: {},
       newApp: {},
       review: {},
       selectedApplication: {},
@@ -723,8 +718,9 @@ export default {
       this.$refs.vuetable && this.$refs.vuetable.normalizeFields();
     },
     scoreBoxClick: function(application) {
+      let self = this;
       ScoresApi.getByApplicationId(application.id).then(function(response) {
-        this.scoreData = response.data;
+        self.scoreData = response.data;
       });
       this.$refs.scoreModalRef.show();
     },
@@ -810,6 +806,18 @@ export default {
     updateReview: function() {
       let self = this;
       this.selectedReview.status = "scored";
+      this.newScore.application = this.selectedReview.id;
+      this.newScore.score = 5;
+      //TODO: check if this staff already scored the application?
+      ScoresApi.add(this.selectedReview.id, this.newScore).then(
+        function() {
+          alert("good");
+        },
+        function() {
+          alert("error");
+        }
+      );
+
       applicationApi.put(this.seasonId, this.selectedReview).then(
         function() {
           self.notifySuccess("The application reviewed");
