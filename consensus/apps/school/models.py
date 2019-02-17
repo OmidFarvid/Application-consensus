@@ -10,7 +10,7 @@ User = get_user_model()
 @reversion.register()
 class School(models.Model):
     full_name = models.CharField(max_length=255)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
+    participations = models.ManyToManyField(User, through='Participation', through_fields=('school', 'participant'))
     phone_number = models.CharField(max_length=255, null=True, blank=True)
     email = models.CharField(max_length=255, null=True, blank=True)
     grade = models.IntegerField(null=True, blank=True)
@@ -28,12 +28,6 @@ class School(models.Model):
 
 @reversion.register()
 class Staff(models.Model):
-    school = models.ForeignKey(
-        School,
-        related_name='school_staff',
-        on_delete=models.CASCADE
-    )
-
     user = models.OneToOneField(User, primary_key=False, related_name='user',
                                 on_delete=models.CASCADE)
     first_name = models.CharField(max_length=255)
@@ -46,16 +40,40 @@ class Staff(models.Model):
 
 
 @reversion.register()
+class Participation(models.Model):
+    PARTICIPATION_OWNER = 'o'
+    PARTICIPATION_STAFF = 's'
+    PARTICIPATION_CHOICES = (
+        (PARTICIPATION_OWNER, 'Owner'),
+        (PARTICIPATION_STAFF, 'Staff'),
+    )
+    school = models.ForeignKey(School, on_delete=models.CASCADE)
+    participant = models.ForeignKey(User, on_delete=models.CASCADE)
+    participation_date = models.DateTimeField()
+    participation_type = models.CharField('Participation', max_length=1, choices=PARTICIPATION_CHOICES)
+
+    def __init__(self, school, participant, participation_date, participation_type, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.school = school
+        self.participant = participant
+        self.participation_date = participation_date
+        self.participation_type = participation_type
+
+    def __str__(self):
+        return self.participation_type
+
+
+@reversion.register()
 class Season(models.Model):
     full_name = models.CharField(max_length=255)
     school = models.ForeignKey(
         School,
-        related_name='school_season',
+        related_name='season',
         on_delete=models.CASCADE
     )
     kind = models.CharField(max_length=255, null=True, blank=True)
-    start_date = models.DateTimeField(auto_now_add=True, null=True)
-    end_date = models.DateTimeField(auto_now_add=True, null=True)
+    start_date = models.DateField(null=True)
+    end_date = models.DateField(null=True)
     info = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
@@ -75,7 +93,7 @@ class Application(models.Model):
 
     season = models.ForeignKey(
         Season,
-        related_name='season_application',
+        related_name='application',
         on_delete=models.CASCADE
     )
     first_name = models.CharField(max_length=255)
@@ -86,7 +104,6 @@ class Application(models.Model):
     email = models.CharField(max_length=255, null=True, blank=True)
     info = models.CharField(max_length=255, null=True, blank=True)
     educational_info = models.CharField(max_length=255, null=True, blank=True)
-    score = models.IntegerField(null=True, blank=True)
     created_date = models.DateTimeField(auto_now_add=True, null=True)
     status = models.CharField(max_length=255, null=True, blank=True)
 
@@ -98,20 +115,14 @@ class Application(models.Model):
 class Score(models.Model):
     application = models.ForeignKey(
         Application,
-        related_name='application_score',
+        related_name='score',
         on_delete=models.CASCADE
     )
 
-    staff = models.ForeignKey(
-        Staff,
-        related_name='staff_score',
-        on_delete=models.CASCADE
-    )
+    staff = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
 
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255, null=True, blank=True)
     score_date = models.DateTimeField(auto_now_add=True, null=True)
     score = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return self.first_name
+        return self.score
