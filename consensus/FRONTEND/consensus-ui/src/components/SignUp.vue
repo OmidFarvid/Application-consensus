@@ -122,7 +122,7 @@
                       <div
                         id="recaptcha"
                         class="g-recaptcha"
-                        data-sitekey="6Lcz5mwUAAAAAApZlebKWHYLt_Gx3w6CkPfBGPyq"
+                        data-sitekey="6LfLB5UUAAAAAIPfCgidp2IjNVwt0ERbP9jVeSix"
                       ></div>
                     </div>
                   </div>
@@ -163,13 +163,19 @@ export default {
     };
   },
   methods: {
-    submit: function() {
+    submit: function(event) {
       if (
         this.registerFields.username === "" ||
         this.registerFields.password === ""
       ) {
         this.notifyError("please fill all required fields");
         return;
+      }
+
+      if(!event.target['g-recaptcha-response'].value)
+      {
+        this.notifyError("Please check reCaptcha.");
+        return true;
       }
 
       let self = this;

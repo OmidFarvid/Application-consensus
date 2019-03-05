@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponse
+from django.contrib.auth.models import Group
 from djoser.serializers import UserSerializer
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
@@ -11,13 +11,12 @@ from .serializers import SessionSerializer, UserSessionSerializer
 
 
 class SessionView(viewsets.ViewSet):
-
     class SessionPermission(permissions.BasePermission):
         """ custom class to check permissions for sessions """
 
         def has_permission(self, request, view):
             """ check request permissions """
-            if request.method == 'POST' or request.method == 'PUT':
+            if request.method == 'POST':
                 return True
             return request.user.is_authenticated and request.user.is_active
 
@@ -29,7 +28,7 @@ class SessionView(viewsets.ViewSet):
 
         return Response(UserSessionSerializer(request.user, context={'request': request}).data)
 
-    def put(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         """ api to login """
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -51,18 +50,20 @@ class SessionView(viewsets.ViewSet):
         response = Response({'id': user_id})
         return response
 
-    def post(self, request, *args, **kwargs):
+    @action(detail=False, methods=['POST'])
+    def signup(self, request, *args, **kwargs):
         VALID_USER_FIELDS = [f.name for f in User._meta.fields]
-        DEFAULTS = {
-            # you can define any defaults that you would like for the user, here
-        }
         serialized = UserSerializer(data=request.data)
         if serialized.is_valid():
             user_data = {field: data for (field, data) in request.data.items() if field in VALID_USER_FIELDS}
-            user_data.update(DEFAULTS)
             user = User.objects.create_user(
                 **user_data
             )
+
+            # Add corresponding group
+            consensus_user_group = Group.objects.get(name='consensus_user')
+            if consensus_user_group:
+                user.groups.add(consensus_user_group)
             return Response(UserSerializer(instance=user).data, status=status.HTTP_201_CREATED)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)

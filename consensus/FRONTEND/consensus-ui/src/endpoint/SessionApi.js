@@ -5,10 +5,10 @@ export default {
     return Api.get("session");
   },
   login(username, password) {
-    return Api.put("session", { username: username, password: password });
+    return Api.post("session", { username: username, password: password });
   },
   signUp(fields) {
-    return Api.post("session", fields);
+    return Api.post("session/signup", fields);
   },
   logout() {
     return Api.delete("session");
