@@ -59,11 +59,6 @@ class SessionView(viewsets.ViewSet):
             user = User.objects.create_user(
                 **user_data
             )
-
-            # Add corresponding group
-            consensus_user_group = Group.objects.get(name='consensus_user')
-            if consensus_user_group:
-                user.groups.add(consensus_user_group)
             return Response(UserSerializer(instance=user).data, status=status.HTTP_201_CREATED)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)

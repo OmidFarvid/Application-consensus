@@ -172,8 +172,7 @@ export default {
         return;
       }
 
-      if(!event.target['g-recaptcha-response'].value)
-      {
+      if (!event.target["g-recaptcha-response"].value) {
         this.notifyError("Please check reCaptcha.");
         return true;
       }

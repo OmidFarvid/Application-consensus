@@ -59,7 +59,7 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'consensus.helpers.utils.custom_rest_exception_handler',
     'DEFAULT_PERMISSION_CLASSES': [
-        'consensus.helpers.utils.CustomDjangoModelPermissions'
+        'rest_framework.permissions.IsAuthenticated'
     ],
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
     'DEFAULT_VERSION': 'v1',
