@@ -81,81 +81,18 @@
             <form>
               <div class="row">
                 <div class="col-md-6 col-sm-6 col-xs-6">
-                  <div class="form-group">
-                    <label class="pull-left">First Name</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      v-model="selectedStaff.first_name"
-                    />
-                  </div>
-                </div>
-                <div class="col-md-6 col-sm-6 col-xs-6">
-                  <div class="form-group">
-                    <label class="pull-left">Last Name</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      v-model="selectedStaff.last_name"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-md-6 col-sm-6 col-xs-6">
-                  <div class="form-group">
-                    <label class="pull-left">User Name</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      v-model="selectedStaff.user_name"
-                    />
-                  </div>
-                </div>
-                <div class="col-md-6 col-sm-6 col-xs-6">
-                  <div class="form-group">
-                    <label class="pull-left">Email</label>
-                    <input
-                      type="email"
-                      class="form-control"
-                      v-model="selectedStaff.email"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div class="row">
-                <div class="col-md-6 col-sm-6 col-xs-6">
-                  <div class="form-group">
-                    <label class="pull-left">Phone Number</label>
-                    <input
-                      type="text"
-                      class="form-control"
-                      v-model="selectedStaff.phone_number"
-                    />
-                  </div>
-                </div>
-                <div class="col-md-6 col-sm-6 col-xs-6">
-                  <div class="form-group">
-                    <label class="pull-left">Password</label>
-                    <input
-                      type="password"
-                      class="form-control"
-                      v-model="selectedStaff.password"
-                    />
-                  </div>
-                </div>
-              </div>
-              <hr />
-              <div class="row">
-                <div class="col-md-6 col-sm-6 col-xs-6">
-                  <label> Or search and add by username</label>
+                  <label>Search and add by username</label>
                   <div class="input-group mb-2">
                     <div class="input-group-prepend">
                       <div class="input-group-text">
                         <i class="fa fa-search"></i>
                       </div>
                     </div>
-                    <input type="text" class="form-control" />
+                    <input
+                      type="text"
+                      class="form-control"
+                      v-model="selectedStaff.username"
+                    />
                   </div>
                 </div>
                 <div class="col-md-6 col-sm-6 col-xs-6">
@@ -166,7 +103,11 @@
                         <i class="fa fa-search"></i>
                       </div>
                     </div>
-                    <input type="text" class="form-control" />
+                    <input
+                      type="text"
+                      class="form-control"
+                      v-model="selectedStaff.email"
+                    />
                   </div>
                 </div>
               </div>
@@ -178,11 +119,11 @@
         <div class="row row-no-padding width-full">
           <div class="col-md-4 col-sm-4 col-xs-12">
             <button
-              v-on:click="submitStaff"
+              v-on:click="inviteStaff"
               type="button"
               class="btn btn-success btn-block"
             >
-              <i class="glyphicon glyphicon-ok" @click="inviteStaff()"></i>
+              <i class="glyphicon glyphicon-ok"></i>
               Submit Staff
             </button>
           </div>
@@ -335,35 +276,20 @@ export default {
       this.selectedStaff = {};
       this.$refs.staffModalRef.show();
     },
-    submitStaff: function() {
+    inviteStaff: function() {
       let self = this;
-      if (this.selectedStaff.id) {
-        staffApi.put(self.schoolId, self.selectedStaff).then(
-          function() {
-            self.notifySuccess("The staff updated");
-            self.$refs.staffModalRef.hide();
-          },
-          function() {
-            self.notifyError(
-              "Some error happened when trying to update the staff"
-            );
-          }
-        );
-      } else {
-        self.selectedStaff.school = this.schoolId;
-        staffApi.add(self.schoolId, self.selectedStaff).then(
-          function(resp) {
-            self.notifySuccess("The staff inserted");
-            self.$refs.staffModalRef.hide();
-            self.staffData.results.push(resp.data);
-          },
-          function() {
-            self.notifyError(
-              "Some error happened when trying to add the new staff"
-            );
-          }
-        );
-      }
+      staffApi.invite(self.schoolId, self.selectedStaff).then(
+        function(resp) {
+          self.notifySuccess("The staff invited");
+          self.$refs.staffModalRef.hide();
+          self.staffData.results.push(resp.data);
+        },
+        function() {
+          self.notifyError(
+            "Some error happened when trying to add the new staff"
+          );
+        }
+      );
     }
   }
 };

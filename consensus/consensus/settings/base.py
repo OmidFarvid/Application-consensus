@@ -131,14 +131,6 @@ WSGI_APPLICATION = 'consensus.wsgi.application'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 
-# anymail
-ANYMAIL = {
-    'MAILGUN_SENDER_DOMAIN': '<DOMAIN>',
-    'MAILGUN_API_KEY': '<KEY>',
-}
-# EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = '/consensus-messages'
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -237,12 +229,13 @@ STATICFILES_DIRS = (
 )
 
 # email setting
-EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
 ANYMAIL = {
-    'MAILGUN_SENDER_DOMAIN': '<MAILGUN_SENDER_DOMAIN>',
-    'MAILGUN_API_KEY': '<SECRET>',
+    'MAILGUN_SENDER_DOMAIN': '<DOMAIN>',
+    'MAILGUN_API_KEY': '<KEY>',
 }
-DEFAULT_EMAIL_FROM = '<DEFAULT_EMAIL_FROM>'
+# EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = './consensus-messages'
 
 # twilio sms setting
 SENDSMS_BACKEND = 'consensus.helpers.utils.SmsBackend'

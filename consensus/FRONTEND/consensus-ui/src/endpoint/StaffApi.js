@@ -12,5 +12,8 @@ export default {
   },
   delete(schoolId, staff) {
     return Api.delete(`school/${schoolId}/staff/${staff.id}`);
+  },
+  invite(schoolId, staff) {
+    return Api.post(`school/${schoolId}/staff/invite`, staff);
   }
 };

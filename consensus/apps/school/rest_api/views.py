@@ -2,16 +2,11 @@ from apps.school.models import School, Application, Score, Season, Staff, Partic
 from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ScoreSerializer, SeasonSerializer, \
     StaffSerializer
 from django.core.mail import send_mail
-from django.contrib.auth.hashers import make_password
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from djoser.serializers import UserSerializer
-from requests import Response
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
-
-from apps.school.models import User
+from rest_framework.response import Response
 
 
 class SchoolBasedViewMixin(object):
@@ -144,15 +139,17 @@ class StaffView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         ).first()
         if participation:
             filter_by_email_or_user_name = \
-                Staff.objects.filter(email=kwargs.get('email')) | \
-                Staff.objects.filter(user_name=kwargs.get('user_name'))
+                Staff.objects.filter(email=self.request.data.get('email')) | \
+                Staff.objects.filter(user__username=self.request.data.get('username'))
             staff = filter_by_email_or_user_name.first()
             if staff:
                 send_mail("It works!", "Invitation email",
                           "Anymail Sender <from@example.com>", ["to@example.com"])
+                return Response({'success': True}, status=200)
             else:
                 send_mail("It works!", "Sign up email",
                           "Anymail Sender <from@example.com>", ["to@example.com"])
+                return Response({'success': True}, status=200)
         else:
             raise PermissionDenied
 
