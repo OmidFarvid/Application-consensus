@@ -56,12 +56,12 @@ export default new Router({
       ]
     },
     {
-      path: "/singIn",
+      path: "/signIn",
       name: "signIn",
       component: SignIn
     },
     {
-      path: "/singUp",
+      path: "/signUp",
       name: "signUp",
       component: SignUp
     },

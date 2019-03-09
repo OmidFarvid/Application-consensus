@@ -1,7 +1,7 @@
 <template>
   <div class="signUp">
     <div class="container">
-      <div class="singup-form">
+      <div class="signUp-form">
         <div class="row">
           <div class="col-md-6 col-sm-6 col-xs-6 offset-3">
             <div class="main-div">
@@ -68,8 +68,12 @@
                         class="form-control select"
                         v-model="registerFields.country"
                       >
-                        <option>USA</option>
-                        <option>UK</option>
+                        <option
+                          v-for="country in countries"
+                          v-bind:key="country"
+                        >
+                          {{ country }}
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -80,8 +84,14 @@
                         class="form-control select"
                         v-model="registerFields.city"
                       >
-                        <option>California</option>
-                        <option>Colorado</option>
+                        <option
+                          v-for="city in countriesWithCities[
+                            registerFields.country
+                          ]"
+                          v-bind:key="city"
+                        >
+                          {{ city }}
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -150,16 +160,20 @@
 <script>
 import SessionApi from "@/endpoint/SessionApi";
 import UtilMixin from "@/mixins/UtilMixin";
+import countryApi from "@/endpoint/CountryApi";
 
 export default {
   name: "SignUp",
   mixins: [UtilMixin],
   created: function() {
     this.addReCaptchaScriptTag();
+    this.getCountries();
   },
-  data: function() {
+  data() {
     return {
-      registerFields: {}
+      registerFields: {},
+      countries: [],
+      countriesWithCities: []
     };
   },
   methods: {
@@ -191,6 +205,12 @@ export default {
       let recaptcha = document.createElement("script");
       recaptcha.setAttribute("src", "https://www.google.com/recaptcha/api.js");
       document.head.appendChild(recaptcha);
+    },
+    getCountries() {
+      this.countriesWithCities = countryApi.getAll();
+      for (const country in this.countriesWithCities) {
+        this.countries.push(country);
+      }
     }
   }
 };
@@ -253,12 +273,12 @@ export default {
   margin-bottom: 15px;
 }
 
-.singup span {
+.signUp span {
   color: #777777;
   font-size: 14px;
 }
 
-.singup a {
+.signUp a {
   margin-left: 10px;
 }
 
