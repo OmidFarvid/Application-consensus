@@ -8,5 +8,6 @@ DATABASES = {
     }
 }
 
-EMAIL_MOCK_SENDING = True
-SMS_MOCK_SENDING = True
+EMAIL_BACKEND = 'django.core.mail.backends.dummy.EmailBackend'
+
+SENDSMS_BACKEND = 'sendsms.backends.dummy.SmsBackend'

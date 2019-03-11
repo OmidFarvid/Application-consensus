@@ -137,12 +137,8 @@ LOGIN_REDIRECT_URL = '/'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', 'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.path.join(BASE_DIR, 'db.consensus'), 'NAME': 'consensus',
-            'USER': 'consensus_user',
-        'PASSWORD': '123sat',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -233,17 +229,13 @@ ANYMAIL = {
     'MAILGUN_SENDER_DOMAIN': '<DOMAIN>',
     'MAILGUN_API_KEY': '<KEY>',
 }
-# EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = './consensus-messages'
+EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
 
 # twilio sms setting
-SENDSMS_BACKEND = 'consensus.helpers.utils.SmsBackend'
+SENDSMS_BACKEND = 'sendsms.backends.twiliorest.SmsBackend'
 SENDSMS_TWILIO_ACCOUNT_SID = 'SIDXXXXXXXXXXXXXXX'
 SENDSMS_TWILIO_AUTH_TOKEN = 'ATXXXXXXXXXXXXXXX'
 SMS_DEFAULT_FROM_PHONE = 'NNNNNNNNNN'
 
 # consensus specific settings
-EMAIL_MOCK_SENDING = False
-SMS_MOCK_SENDING = False
 HOSTNAME = 'localhost'

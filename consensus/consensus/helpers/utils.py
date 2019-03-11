@@ -29,8 +29,6 @@ from rest_framework.pagination import PageNumberPagination, _positive_int
 from rest_framework.permissions import DjangoModelPermissions, BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from sendsms import api
-from sendsms.backends.base import BaseSmsBackend
-from twilio.rest import Client as TwilioRestClient
 
 
 class PermissionRequiredMixin(DjangoPermissionRequiredMixin):
@@ -111,32 +109,6 @@ def to_dict(obj, fields=None, fields_map=None, extra_fields=None):
             data[field] = v
 
     return data
-
-
-class SmsBackend(BaseSmsBackend):
-    def send_messages(self, messages):
-        client = TwilioRestClient(settings.SENDSMS_TWILIO_ACCOUNT_SID, settings.SENDSMS_TWILIO_AUTH_TOKEN)
-        results = []
-        for message in messages:
-            to_res = []
-            for to in message.to:
-                try:
-                    msg = client.messages.create(
-                        to=to,
-                        from_=message.from_phone or settings.SMS_DEFAULT_FROM_PHONE,
-                        body=message.body
-                    )
-                    to_res.append(msg)
-                except Exception:
-                    if not self.fail_silently:
-                        raise
-                    to_res.append(None)
-            results.append(to_res)
-        if len(results) == 1:
-            results = results[0]
-            if len(results) == 1:
-                results = results[0]
-        return results
 
 
 class CustomPagination(PageNumberPagination):

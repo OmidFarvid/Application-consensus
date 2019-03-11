@@ -107,7 +107,7 @@ class SchoolView(viewsets.ModelViewSet):
             raise PermissionDenied
 
 
-class StaffView(viewsets.ModelViewSet):
+class StaffView(SchoolBasedViewMixin, viewsets.ModelViewSet):
     queryset = Staff.objects.all()
     serializer_class = StaffSerializer
     ordering = 'first_name'
