@@ -29,8 +29,6 @@ from rest_framework.pagination import PageNumberPagination, _positive_int
 from rest_framework.permissions import DjangoModelPermissions, BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from sendsms import api
-from sendsms.backends.base import BaseSmsBackend
-from twilio.rest import Client as TwilioRestClient
 
 
 class PermissionRequiredMixin(DjangoPermissionRequiredMixin):
@@ -111,32 +109,6 @@ def to_dict(obj, fields=None, fields_map=None, extra_fields=None):
             data[field] = v
 
     return data
-
-
-class SmsBackend(BaseSmsBackend):
-    def send_messages(self, messages):
-        client = TwilioRestClient(settings.SENDSMS_TWILIO_ACCOUNT_SID, settings.SENDSMS_TWILIO_AUTH_TOKEN)
-        results = []
-        for message in messages:
-            to_res = []
-            for to in message.to:
-                try:
-                    msg = client.messages.create(
-                        to=to,
-                        from_=message.from_phone or settings.SMS_DEFAULT_FROM_PHONE,
-                        body=message.body
-                    )
-                    to_res.append(msg)
-                except Exception:
-                    if not self.fail_silently:
-                        raise
-                    to_res.append(None)
-            results.append(to_res)
-        if len(results) == 1:
-            results = results[0]
-            if len(results) == 1:
-                results = results[0]
-        return results
 
 
 class CustomPagination(PageNumberPagination):
@@ -323,18 +295,6 @@ class ExtendedOrderingFilterBackend(OrderingFilterBackend):
                 field_ordering = ['{}{}'.format('-' if descending else '', f) for f in field_ordering]
             new_fields.extend(field_ordering)
         return new_fields
-
-
-class CustomDjangoModelPermissions(DjangoModelPermissions):
-    perms_map = {
-        'OPTIONS': [],
-        'HEAD': [],
-        'GET': ['%(app_label)s.view_%(model_name)s'],
-        'POST': ['%(app_label)s.add_%(model_name)s'],
-        'PUT': ['%(app_label)s.change_%(model_name)s'],
-        'PATCH': ['%(app_label)s.change_%(model_name)s'],
-        'DELETE': ['%(app_label)s.delete_%(model_name)s'],
-    }
 
 
 class ExplicitPermissions(BasePermission):
