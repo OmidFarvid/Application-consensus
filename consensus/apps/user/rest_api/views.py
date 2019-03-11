@@ -1,16 +1,16 @@
-from datetime import timedelta
-
-from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
-from django.core import signing
-from rest_framework import viewsets, permissions
+from django.contrib.auth.models import Group
+from djoser.serializers import UserSerializer
+from rest_framework import viewsets, permissions, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from djoser.views import SetPasswordView as JoserSetPasswordView
-from .serializers import SessionSerializer, UserSessionSerializer, FreshSessionSerializer
+
+from apps.user.models import User
+from .serializers import SessionSerializer, UserSessionSerializer
 
 
 class SessionView(viewsets.ViewSet):
-
     class SessionPermission(permissions.BasePermission):
         """ custom class to check permissions for sessions """
 
@@ -49,6 +49,19 @@ class SessionView(viewsets.ViewSet):
         logout(request)
         response = Response({'id': user_id})
         return response
+
+    @action(detail=False, methods=['POST'])
+    def signup(self, request, *args, **kwargs):
+        VALID_USER_FIELDS = [f.name for f in User._meta.fields]
+        serialized = UserSerializer(data=request.data)
+        if serialized.is_valid():
+            user_data = {field: data for (field, data) in request.data.items() if field in VALID_USER_FIELDS}
+            user = User.objects.create_user(
+                **user_data
+            )
+            return Response(UserSerializer(instance=user).data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
     create = post  # this is a trick to show this view in api-root
 

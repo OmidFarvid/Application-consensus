@@ -53,9 +53,11 @@
                   <i class="fa fa-google-plus"></i> Sign in with google
                 </button>
                 <hr />
-                <div class="singup">
+                <div class="signUp">
                   <span>Not have an account?</span>
-                  <a href="SignUp.html">Create a new one</a>
+                  <router-link class="linked" :to="{ name: 'signUp' }"
+                    >Create a new one</router-link
+                  >
                 </div>
               </form>
             </div>
@@ -162,12 +164,12 @@ export default {
   margin-bottom: 15px;
 }
 
-.singup span {
+.signUp span {
   color: #777777;
   font-size: 14px;
 }
 
-.singup a {
+.signUp a {
   margin-left: 10px;
 }
 

@@ -325,18 +325,6 @@ class ExtendedOrderingFilterBackend(OrderingFilterBackend):
         return new_fields
 
 
-class CustomDjangoModelPermissions(DjangoModelPermissions):
-    perms_map = {
-        'OPTIONS': [],
-        'HEAD': [],
-        'GET': ['%(app_label)s.view_%(model_name)s'],
-        'POST': ['%(app_label)s.add_%(model_name)s'],
-        'PUT': ['%(app_label)s.change_%(model_name)s'],
-        'PATCH': ['%(app_label)s.change_%(model_name)s'],
-        'DELETE': ['%(app_label)s.delete_%(model_name)s'],
-    }
-
-
 class ExplicitPermissions(BasePermission):
     '''
     set this as a member of permission_classes field of view. i.e:

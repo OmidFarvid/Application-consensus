@@ -28,7 +28,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 INSTALLED_APPS = [
     'bootstrap_admin',
@@ -45,7 +44,6 @@ INSTALLED_APPS = [
     'apps.school'
 ]
 
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -61,7 +59,7 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'consensus.helpers.utils.custom_rest_exception_handler',
     'DEFAULT_PERMISSION_CLASSES': [
-        'consensus.helpers.utils.CustomDjangoModelPermissions'
+        'rest_framework.permissions.IsAuthenticated'
     ],
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
     'DEFAULT_VERSION': 'v1',
@@ -139,8 +137,12 @@ LOGIN_REDIRECT_URL = '/'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.sqlite3', 'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.path.join(BASE_DIR, 'db.consensus'), 'NAME': 'consensus',
+            'USER': 'consensus_user',
+        'PASSWORD': '123sat',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -197,7 +199,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -210,7 +211,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
@@ -229,12 +229,13 @@ STATICFILES_DIRS = (
 )
 
 # email setting
-EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
 ANYMAIL = {
-    'MAILGUN_SENDER_DOMAIN': '<MAILGUN_SENDER_DOMAIN>',
-    'MAILGUN_API_KEY': '<SECRET>',
+    'MAILGUN_SENDER_DOMAIN': '<DOMAIN>',
+    'MAILGUN_API_KEY': '<KEY>',
 }
-DEFAULT_EMAIL_FROM = '<DEFAULT_EMAIL_FROM>'
+# EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = './consensus-messages'
 
 # twilio sms setting
 SENDSMS_BACKEND = 'consensus.helpers.utils.SmsBackend'
