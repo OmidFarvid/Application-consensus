@@ -2,6 +2,7 @@ from apps.school.models import School, Application, Score, Season, Staff, Partic
 from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ScoreSerializer, SeasonSerializer, \
     StaffSerializer
 from django.core.mail import send_mail
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -139,8 +140,10 @@ class StaffView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         ).first()
         if participation:
             filter_by_email_or_user_name = \
-                Staff.objects.filter(email=self.request.data.get('email')) | \
-                Staff.objects.filter(user__username=self.request.data.get('username'))
+                Staff.objects.filter(
+                    Q(email=self.request.data.get('email'))) | \
+                    Q(user__username=self.request.data.get('username')
+                  )
             staff = filter_by_email_or_user_name.first()
             if staff:
                 send_mail("It works!", "Invitation email",
