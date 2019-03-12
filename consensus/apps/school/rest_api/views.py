@@ -1,6 +1,6 @@
-from apps.school.models import School, Application, Score, Season, Staff, Participation
+from apps.school.models import School, Application, Score, Season, Staff, Participation, Invite
 from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ScoreSerializer, SeasonSerializer, \
-    StaffSerializer
+    StaffSerializer, InviteSerializer
 from django.core.mail import send_mail
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -130,33 +130,8 @@ class StaffView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             user__participation__participation_type=Participation.PARTICIPATION_STAFF
         )
 
-    @action(detail=False, methods=['POST'])
-    def invite(self, request, *args, **kwargs):
-        # If the current user is the owner of the given school
-        participation = Participation.objects.filter(
-            school=self.base_school_id,
-            participant=self.request.user,
-            participation_type=Participation.PARTICIPATION_OWNER
-        ).first()
-        if participation:
-            filter_by_email_or_user_name = \
-                Staff.objects.filter(
-                    Q(email=self.request.data.get('email'))) | \
-                    Q(user__username=self.request.data.get('username')
-                  )
-            staff = filter_by_email_or_user_name.first()
-            if staff:
-                send_mail("It works!", "Invitation email",
-                          "Anymail Sender <from@example.com>", ["to@example.com"])
-                return Response({'success': True}, status=200)
-            else:
-                send_mail("It works!", "Sign up email",
-                          "Anymail Sender <from@example.com>", ["to@example.com"])
-                return Response({'success': True}, status=200)
-        else:
-            raise PermissionDenied
-
     def perform_create(self, serializer):
+        # TODO: prevent create stuff directly
         # If the current user is the owner of the given school
         participation = Participation.objects.filter(
             school=self.base_school_id,
@@ -167,6 +142,83 @@ class StaffView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             serializer.save()
         else:
             raise PermissionDenied
+
+    def perform_update(self, serializer):
+        # If the current user is the owner of the given school
+        participation = Participation.objects.filter(
+            school=self.base_school_id,
+            participant=self.request.user,
+            participation_type=Participation.PARTICIPATION_OWNER
+        ).first()
+        if participation:
+            serializer.save()
+        else:
+            raise PermissionDenied
+
+    def perform_destroy(self, instance):
+        # If the current user is the owner of the given school
+        participation = Participation.objects.filter(
+            school=self.base_school_id,
+            participant=self.request.user,
+            participation_type=Participation.PARTICIPATION_OWNER
+        ).first()
+        if participation:
+            instance.delete()
+        else:
+            raise PermissionDenied
+
+
+class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
+    queryset = Invite.objects.all()
+    serializer_class = InviteSerializer
+    ordering = 'username'
+    ordering_fields = '__all__'
+
+    def get_queryset(self):
+        # If the current user is the owner of the given school
+        participation = Participation.objects.filter(
+            school=self.base_school_id,
+            participant=self.request.user,
+            participation_type=Participation.PARTICIPATION_OWNER
+        ).first()
+        if not participation:
+            raise PermissionDenied
+
+        # All Invites for the given school
+        return self.queryset.filter(
+            school=self.base_school_id
+        )
+
+    def perform_create(self, serializer):
+        # If the current user is the owner of the given school
+        participation = Participation.objects.filter(
+            school=self.base_school_id,
+            participant=self.request.user,
+            participation_type=Participation.PARTICIPATION_OWNER
+        ).first()
+        if not participation:
+            raise PermissionDenied
+
+        filter_by_email_or_user_name = Invite.objects.filter(
+            Q(email=self.request.data.get('email'))) | \
+                                       Q(username=self.request.data.get('username')
+                                         )
+        invite = filter_by_email_or_user_name.first()
+        if invite:
+            # TODO: return the username or email already invited response
+            return Response()
+        else:
+            # TODO: Try to find user with given username or email
+            if True:
+                # TODO: if user exists ....
+                send_mail("It works!", "Invitation email",
+                          "Anymail Sender <from@example.com>", ["to@example.com"])
+                return Response({'success': True}, status=200)
+            else:
+                # TODO: if user does not exist ....
+                send_mail("It works!", "Sign up email",
+                          "Anymail Sender <from@example.com>", ["to@example.com"])
+                return Response({'success': True}, status=200)
 
     def perform_update(self, serializer):
         # If the current user is the owner of the given school

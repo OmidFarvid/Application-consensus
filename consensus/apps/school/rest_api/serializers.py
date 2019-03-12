@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from apps.school import models
-from apps.school.models import Participation, School, Application, Staff
+from apps.school.models import Participation, School, Application, Staff, Invite
 import datetime
 
 
@@ -47,6 +47,12 @@ class StaffSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = models.Staff
+
+
+class InviteSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+        model = models.Invite
 
 
 class SeasonSerializer(serializers.ModelSerializer):

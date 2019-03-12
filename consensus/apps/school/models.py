@@ -62,6 +62,30 @@ class Participation(models.Model):
 
 
 @reversion.register()
+class Invite(models.Model):
+    INVITATION_PENDING = 'p'
+    INVITATION_ACCEPT = 'a'
+    INVITATION_CHOICES = (
+        (INVITATION_PENDING, 'Pending'),
+        (INVITATION_ACCEPT, 'Accept'),
+    )
+
+    username = models.CharField(max_length=255)
+    school = models.ForeignKey(
+        School,
+        related_name='invite',
+        on_delete=models.CASCADE
+    )
+    email = models.CharField(max_length=255, null=True, blank=True)
+    invitation_date = models.DateTimeField()
+    acceptation_date = models.DateTimeField()
+    status = models.CharField('Status', max_length=1, choices=INVITATION_CHOICES)
+
+    def __str__(self):
+        return self.username
+
+
+@reversion.register()
 class Season(models.Model):
     full_name = models.CharField(max_length=255)
     school = models.ForeignKey(
