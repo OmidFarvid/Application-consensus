@@ -290,7 +290,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                     self.base_school_id,
                     "invite",
                     "accept",
-                    signing.dumps(invite.id),
+                    signing.dumps((invite.id, user.id)),
                 ),
                 "Consensus Admin <from@example.com>", ["{}".format(user.email)])
             return Response(
@@ -336,7 +336,38 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'])
     def accept(self, request, *args, **kwargs):
         # Accept given acceptation
-        unsign(kwargs['token'], max_age=4320)
+        args = unsign(kwargs['token'], max_age=4320)
+        invite_id = args[0]
+        user_id = args[1]
+        if user_id:
+            user = User.objects.filter(id=user_id).first()
+        if invite_id:
+            invite = Invite.objects.filter(id=invite_id).first()
+            if invite:
+                if user:
+                    school = School.objects.filter(id=invite.school.id)
+                    if school:
+                        Staff.objects.create(user=user,
+                                             first_name=user.first_name,
+                                             last_name=user.last_name,
+                                             phone_number=0,
+                                             email=user.email
+                                             )
+                        Participation.objects.create(participation_type=Participation.PARTICIPATION_STAFF,
+                                                     School=school,
+                                                     participant=user,
+                                                     participation_date=datetime.datetime.now())
+
+                        invite.update(status=Invite.INVITATION_ACCEPT)
+                        return Response({'success': False}, status=200)
+                    else:
+                        return Response({'description': 'Invalid School', 'success': False}, status=200)
+                else:
+                    return Response({'description': 'Invalid  User', 'success': False}, status=200)
+            else:
+                return Response({'description': 'Invalid Invite', 'success': False}, status=200)
+        else:
+            return Response({'description': 'Invalid Token', 'success': False}, status=200)
 
 
 class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):
