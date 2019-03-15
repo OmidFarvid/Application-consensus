@@ -1,7 +1,7 @@
 import datetime
 from email.utils import parseaddr
 from django.core import serializers
-
+from django.core import signing
 from apps.school.models import School, Application, Score, Season, Staff, Participation, Invite, User
 from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ScoreSerializer, SeasonSerializer, \
     StaffSerializer, InviteSerializer
@@ -12,6 +12,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+
+from consensus.helpers.shortcuts import unsign
 
 
 class SchoolBasedViewMixin(object):
@@ -229,7 +231,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                     'description': 'The user already invited',
                     'success': False
                 },
-                status=400
+                status=409
             )
         else:
             return self.invite_user(request)
@@ -282,8 +284,13 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             # If the user exists send accept invite email
             send_mail(
                 "You are invited!",
-                "{}/{}/{}/{}/{}/{}".format(
-                    request.get_host, "school", self.base_school_id, "invite", invite.id, "accept"
+                "{}/{}/{}/{}/{}?token={}".format(
+                    request.get_host(),
+                    "school",
+                    self.base_school_id,
+                    "invite",
+                    "accept",
+                    signing.dumps(invite.id),
                 ),
                 "Consensus Admin <from@example.com>", ["{}".format(user.email)])
             return Response(
@@ -291,19 +298,24 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                     'invite': serializers.serialize('json', [ invite, ]),
                     'description': 'The invitation email successfully sent',
                     'success': True
-                }, status=200)
+                }, status=201)
         else:
             # If the user does not exist, send signUp email
             send_mail(
                 "Please singUp!",
-                "signUp",
+                "{}/{}/#/{}?token={}".format(
+                    request.get_host(),
+                    "static",
+                    "signUp",
+                    signing.dumps(invite.id),
+                ),
                 "Consensus Admin <from@example.com>", ["{}".format(serializer.instance.email)])
             return Response(
                 {
                     'invite': serializers.serialize('json', [ invite, ]),
                     'description': 'The signUp email successfully sent',
                     'success': True
-                }, status=200)
+                }, status=201)
 
     def perform_update(self, serializer):
         # If the current user is the owner of the given school
@@ -324,7 +336,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'])
     def accept(self, request, *args, **kwargs):
         # Accept given acceptation
-        kwargs.get('inviteId')
+        unsign(kwargs['token'], max_age=4320)
 
 
 class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):

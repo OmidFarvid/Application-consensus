@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib.auth.mixins import PermissionRequiredMixin as \
     DjangoPermissionRequiredMixin
 from django.contrib.auth.views import redirect_to_login
+from django.core import signing
 from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
 from django.core.validators import EMPTY_VALUES
@@ -408,3 +409,4 @@ def capitalize_first(s):
     if s:
         return s[0].upper() + s[1:]
     return s
+
