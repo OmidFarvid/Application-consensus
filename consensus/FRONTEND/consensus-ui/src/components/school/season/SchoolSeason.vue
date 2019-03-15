@@ -2,7 +2,7 @@
   <section>
     <div class="row row-no-padding justify-content-end">
       <div class="col-md-4 col-sm-4 col-xs-4 ">
-        <button class="btn btn-block btn-primary" v-on:click="addSeason">
+        <button class="btn btn-block btn-success" v-on:click="addSeason">
           <i class="fa fa-plus"></i> Add a new Season
         </button>
       </div>

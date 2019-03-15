@@ -70,7 +70,7 @@ class Invite(models.Model):
         (INVITATION_ACCEPT, 'Accept'),
     )
 
-    username = models.CharField(max_length=255)
+    username = models.CharField(max_length=255, null=True)
     school = models.ForeignKey(
         School,
         related_name='invite',
@@ -78,7 +78,7 @@ class Invite(models.Model):
     )
     email = models.CharField(max_length=255, null=True, blank=True)
     invitation_date = models.DateTimeField()
-    acceptation_date = models.DateTimeField()
+    acceptation_date = models.DateTimeField(null=True)
     status = models.CharField('Status', max_length=1, choices=INVITATION_CHOICES)
 
     def __str__(self):

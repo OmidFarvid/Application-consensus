@@ -1,4 +1,8 @@
-from apps.school.models import School, Application, Score, Season, Staff, Participation, Invite
+import datetime
+from email.utils import parseaddr
+from django.core import serializers
+
+from apps.school.models import School, Application, Score, Season, Staff, Participation, Invite, User
 from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ScoreSerializer, SeasonSerializer, \
     StaffSerializer, InviteSerializer
 from django.core.mail import send_mail
@@ -176,11 +180,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         # If the current user is the owner of the given school
-        participation = Participation.objects.filter(
-            school=self.base_school_id,
-            participant=self.request.user,
-            participation_type=Participation.PARTICIPATION_OWNER
-        ).first()
+        participation = self.get_school_participation()
         if not participation:
             raise PermissionDenied
 
@@ -189,44 +189,125 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             school=self.base_school_id
         )
 
-    def perform_create(self, serializer):
-        # If the current user is the owner of the given school
+    def get_school_participation(self):
         participation = Participation.objects.filter(
             school=self.base_school_id,
             participant=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
+        return participation
+
+    def create(self, request, *args, **kwargs):
+        # If the current user is the owner of the given school
+        participation = self.get_school_participation()
         if not participation:
             raise PermissionDenied
 
-        filter_by_email_or_user_name = Invite.objects.filter(
-            Q(email=self.request.data.get('email'))) | \
-                                       Q(username=self.request.data.get('username')
-                                         )
-        invite = filter_by_email_or_user_name.first()
-        if invite:
-            # TODO: return the username or email already invited response
-            return Response()
+        # If the username or email already invited
+        invite_by_email_and_username = None
+        if request.data.get('email', None) and request.data.get('username', None):
+            invite_by_email_and_username = Invite.objects.filter(
+                Q(email=request.data.get('email')) & Q(username=request.data.get('username'))
+            )
+        elif request.data.get('email', None):
+            invite_by_email_and_username = Invite.objects.filter(email=request.data.get('email'))
+        elif request.data.get('username', None):
+            invite_by_email_and_username = Invite.objects.filter(username=request.data.get('username'))
         else:
-            # TODO: Try to find user with given username or email
-            if True:
-                # TODO: if user exists ....
-                send_mail("It works!", "Invitation email",
-                          "Anymail Sender <from@example.com>", ["to@example.com"])
-                return Response({'success': True}, status=200)
-            else:
-                # TODO: if user does not exist ....
-                send_mail("It works!", "Sign up email",
-                          "Anymail Sender <from@example.com>", ["to@example.com"])
-                return Response({'success': True}, status=200)
+            return Response(
+                {
+                    'description': 'No username or email provided',
+                    'success': False
+                },
+                status=400
+            )
+
+        invite = invite_by_email_and_username.first()
+        if invite:
+            return Response(
+                {
+                    'description': 'The user already invited',
+                    'success': False
+                },
+                status=400
+            )
+        else:
+            return self.invite_user(request)
+
+    def invite_user(self, request):
+        # Find user with given username or email
+        user_by_email_or_username = None
+        if request.data.get('email', None) and request.data.get('username', None):
+            user_by_email_or_username = User.objects.filter(
+                Q(email=request.data.get('email', None)) & Q(username=request.data.get('username', None))
+            )
+        elif request.data.get('email', None):
+            user_by_email_or_username = User.objects.filter(email=request.data.get('email', None))
+        elif request.data.get('username', None):
+            user_by_email_or_username = User.objects.filter(username=request.data.get('username', None))
+        else:
+            return Response(
+                {
+                    'description': 'No username or email provided',
+                    'success': False
+                },
+                status=400
+            )
+        user = user_by_email_or_username.first()
+
+        # Fill request data
+        request.data['school'] = self.base_school_id
+        request.data['invitation_date'] = datetime.datetime.now()
+        request.data['status'] = Invite.INVITATION_PENDING
+        if user:
+            request.data['username'] = user.username
+            request.data['email'] = user.email
+
+        # TODO: Check email address by email_validator
+        # if not parseaddr(request.data.get('email', None)):
+        #     return Response(
+        #         {
+        #             'description': 'Please enter a valid email address to invite',
+        #             'success': False
+        #         },
+        #         status=400
+        #     )
+
+        # Insert a new invite
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        invite = serializer.save()
+
+        if user:
+            # If the user exists send accept invite email
+            send_mail(
+                "You are invited!",
+                "{}/{}/{}/{}/{}/{}".format(
+                    request.get_host, "school", self.base_school_id, "invite", invite.id, "accept"
+                ),
+                "Consensus Admin <from@example.com>", ["{}".format(user.email)])
+            return Response(
+                {
+                    'invite': serializers.serialize('json', [ invite, ]),
+                    'description': 'The invitation email successfully sent',
+                    'success': True
+                }, status=200)
+        else:
+            # If the user does not exist, send signUp email
+            send_mail(
+                "Please singUp!",
+                "signUp",
+                "Consensus Admin <from@example.com>", ["{}".format(serializer.instance.email)])
+            return Response(
+                {
+                    'invite': serializers.serialize('json', [ invite, ]),
+                    'description': 'The signUp email successfully sent',
+                    'success': True
+                }, status=200)
 
     def perform_update(self, serializer):
         # If the current user is the owner of the given school
-        participation = Participation.objects.filter(
-            school=self.base_school_id,
-            participant=self.request.user,
-            participation_type=Participation.PARTICIPATION_OWNER
-        ).first()
+        participation = self.get_school_participation()
         if participation:
             serializer.save()
         else:
@@ -234,15 +315,16 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         # If the current user is the owner of the given school
-        participation = Participation.objects.filter(
-            school=self.base_school_id,
-            participant=self.request.user,
-            participation_type=Participation.PARTICIPATION_OWNER
-        ).first()
+        participation = self.get_school_participation()
         if participation:
             instance.delete()
         else:
             raise PermissionDenied
+
+    @action(detail=False, methods=['GET'])
+    def accept(self, request, *args, **kwargs):
+        # Accept given acceptation
+        kwargs.get('inviteId')
 
 
 class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):
