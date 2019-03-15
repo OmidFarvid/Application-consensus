@@ -58,11 +58,17 @@
               <div class="col-md-6 col-sm-6 col-xs-6">
                 <div class="form-group">
                   <label class="pull-left">Country</label>
-                  <select class="form-control select" v-model="school.country">
-                    <option>US</option>
-                    <option>United kingdom</option>
-                    <option>Canada</option>
-                  </select>
+                 <select
+                        class="form-control select"
+                        v-model="school.country"
+                      >
+                        <option
+                          v-for="country in countries"
+                          v-bind:key="country"
+                        >
+                          {{ country }}
+                        </option>
+                      </select>
                 </div>
               </div>
               <div class="col-md-6 col-sm-6 col-xs-6">
@@ -80,11 +86,19 @@
               <div class="col-md-6 col-sm-6 col-xs-6">
                 <div class="form-group">
                   <label class="pull-left">City</label>
-                  <select class="form-control select" v-model="school.city">
-                    <option>Seattle</option>
-                    <option>Boston</option>
-                    <option>Austin</option>
-                  </select>
+                 <select
+                        class="form-control select"
+                        v-model="school.city"
+                      >
+                        <option
+                          v-for="city in countriesWithCities[
+                            school.country
+                          ]"
+                          v-bind:key="city"
+                        >
+                          {{ city }}
+                        </option>
+                      </select>
                 </div>
               </div>
               <div class="col-md-6 col-sm-6 col-xs-6">
@@ -137,6 +151,7 @@
 <script>
 import UtilMixin from "@/mixins/UtilMixin";
 import SchoolApi from "../../endpoint/SchoolApi";
+import countryApi from "@/endpoint/CountryApi";
 
 export default {
   name: "SubmitSchool",
@@ -144,7 +159,9 @@ export default {
   components: {},
   data: function() {
     return {
-      school: {}
+      school: {},
+      countries: [],
+      countriesWithCities: []
     };
   },
   created: function() {
@@ -163,7 +180,8 @@ export default {
           self.$router.back();
         }
       );
-    }
+    };
+    this.getCountries();
   },
   destroyed: function() {},
   methods: {
@@ -187,6 +205,12 @@ export default {
           self.notifyDefaultServerError(error);
         }
       );
+    },
+    getCountries() {
+      this.countriesWithCities = countryApi.getAll();
+      for (const country in this.countriesWithCities) {
+        this.countries.push(country);
+      }
     }
   }
 };
