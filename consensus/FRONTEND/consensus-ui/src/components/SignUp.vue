@@ -103,6 +103,7 @@
                       <input
                         type="text"
                         class="form-control"
+                        pattern="[+][0-9]{10,12}"
                         v-model="registerFields.phone_number"
                         placeholder="Write down your phone number"
                       />
