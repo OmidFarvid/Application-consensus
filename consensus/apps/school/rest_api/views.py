@@ -12,8 +12,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-
 from consensus.helpers.shortcuts import unsign
+from consensus.urls import API_PREFIX, DEFAULT_VERSION
 
 
 class SchoolBasedViewMixin(object):
@@ -285,12 +285,12 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             send_mail(
                 "You are invited!",
                 "{}/{}/{}/{}/{}?token={}".format(
-                    request.get_host(),
+                    "{}/{}/{}".format(request.get_host(), API_PREFIX, DEFAULT_VERSION),
                     "school",
                     self.base_school_id,
                     "invite",
                     "accept",
-                    signing.dumps((user.id, invite.id)),
+                    signing.dumps({'userId': user.id, 'inviteId': invite.id}),
                 ),
                 "Consensus Admin <from@example.com>", ["{}".format(user.email)])
             return Response(
@@ -337,7 +337,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
     def accept(self, request, *token, **kwargs):
         # Retrieve userId and InviteId from given token
         token = unsign(request.GET.get('token', None), max_age=4320)
-        if not token or token.size != 2:
+        if not token or 'userId' not in token or 'inviteId' not in token:
             return Response(
                 {
                     'description': 'Bad token received',
@@ -347,12 +347,14 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             )
 
         # If user and invite exists and invite is pending
-        user = User.objects.filter(id=token[0]).first()
-        invite = Invite.objects.filter(id=token[1]).first()
+        user = User.objects.filter(id=token.get('userId')).first()
+        invite = Invite.objects.filter(id=token.get('inviteId')).first()
         if user and invite and invite.status == Invite.INVITATION_PENDING:
             # Update invite state
             now = datetime.datetime.now()
-            invite.update(status=Invite.INVITATION_ACCEPT, acceptation_date=now)
+            invite.status = Invite.INVITATION_ACCEPT
+            invite.acceptation_date = now
+            invite.save()
 
             # Create a new staff and make participation with the school
             Staff.objects.create(user=user,
@@ -361,13 +363,13 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                                  phone_number=0,
                                  email=user.email
                                  )
-            school = School.objects.filter(id=invite.school.id)
+            school = School.objects.filter(id=invite.school.id).first()
             Participation.objects.create(participation_type=Participation.PARTICIPATION_STAFF,
-                                         School=school,
+                                         school=school,
                                          participant=user,
                                          participation_date=now)
             # TODO: redirect to signIn page
-            return Response({'success': False}, status=200)
+            return Response({'success': True}, status=200)
 
         else:
             return Response({'description': 'Invalid Invite Or User received', 'success': False}, status=400)
