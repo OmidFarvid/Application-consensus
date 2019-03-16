@@ -290,12 +290,12 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                     self.base_school_id,
                     "invite",
                     "accept",
-                    signing.dumps(invite.id),
+                    signing.dumps((user.id, invite.id)),
                 ),
                 "Consensus Admin <from@example.com>", ["{}".format(user.email)])
             return Response(
                 {
-                    'invite': serializers.serialize('json', [ invite, ]),
+                    'invite': serializers.serialize('json', [invite, ]),
                     'description': 'The invitation email successfully sent',
                     'success': True
                 }, status=201)
@@ -312,7 +312,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                 "Consensus Admin <from@example.com>", ["{}".format(serializer.instance.email)])
             return Response(
                 {
-                    'invite': serializers.serialize('json', [ invite, ]),
+                    'invite': serializers.serialize('json', [invite, ]),
                     'description': 'The signUp email successfully sent',
                     'success': True
                 }, status=201)
@@ -334,9 +334,43 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             raise PermissionDenied
 
     @action(detail=False, methods=['GET'])
-    def accept(self, request, *args, **kwargs):
-        # Accept given acceptation
-        unsign(kwargs['token'], max_age=4320)
+    def accept(self, request, *token, **kwargs):
+        # Retrieve userId and InviteId from given token
+        token = unsign(request.GET.get('token', None), max_age=4320)
+        if not token or token.size != 2:
+            return Response(
+                {
+                    'description': 'Bad token received',
+                    'success': False
+                },
+                status=400
+            )
+
+        # If user and invite exists and invite is pending
+        user = User.objects.filter(id=token[0]).first()
+        invite = Invite.objects.filter(id=token[1]).first()
+        if user and invite and invite.status == Invite.INVITATION_PENDING:
+            # Update invite state
+            now = datetime.datetime.now()
+            invite.update(status=Invite.INVITATION_ACCEPT, acceptation_date=now)
+
+            # Create a new staff and make participation with the school
+            Staff.objects.create(user=user,
+                                 first_name=user.first_name,
+                                 last_name=user.last_name,
+                                 phone_number=0,
+                                 email=user.email
+                                 )
+            school = School.objects.filter(id=invite.school.id)
+            Participation.objects.create(participation_type=Participation.PARTICIPATION_STAFF,
+                                         School=school,
+                                         participant=user,
+                                         participation_date=now)
+            # TODO: redirect to signIn page
+            return Response({'success': False}, status=200)
+
+        else:
+            return Response({'description': 'Invalid Invite Or User received', 'success': False}, status=400)
 
 
 class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):
