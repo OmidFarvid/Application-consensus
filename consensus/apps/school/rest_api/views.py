@@ -1,5 +1,5 @@
 import datetime
-from email.utils import parseaddr
+import re
 from django.core import serializers
 from django.core import signing
 from apps.school.models import School, Application, Score, Season, Staff, Participation, Invite, User
@@ -7,10 +7,10 @@ from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerial
     StaffSerializer, InviteSerializer
 from django.core.mail import send_mail
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
+from django.shortcuts import get_object_or_404, redirect
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, MethodNotAllowed
 from rest_framework.response import Response
 from consensus.helpers.shortcuts import unsign
 from consensus.urls import API_PREFIX, DEFAULT_VERSION
@@ -218,20 +218,20 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         else:
             return Response(
                 {
-                    'description': 'No username or email provided',
+                    'detail': 'No username or email provided',
                     'success': False
                 },
-                status=400
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         invite = invite_by_email_and_username.first()
         if invite:
             return Response(
                 {
-                    'description': 'The user already invited',
+                    'detail': 'The user already invited',
                     'success': False
                 },
-                status=409
+                status=status.HTTP_409_CONFLICT
             )
         else:
             return self.invite_user(request)
@@ -250,10 +250,10 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         else:
             return Response(
                 {
-                    'description': 'No username or email provided',
+                    'detail': 'No username or email provided',
                     'success': False
                 },
-                status=400
+                status=status.HTTP_400_BAD_REQUEST
             )
         user = user_by_email_or_username.first()
 
@@ -265,15 +265,16 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             request.data['username'] = user.username
             request.data['email'] = user.email
 
-        # TODO: Check email address by email_validator
-        # if not parseaddr(request.data.get('email', None)):
-        #     return Response(
-        #         {
-        #             'description': 'Please enter a valid email address to invite',
-        #             'success': False
-        #         },
-        #         status=400
-        #     )
+        # Check email address
+        if not request.data.get('email', None) or \
+                not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", request.data.get('email', None)):
+            return Response(
+                {
+                    'detail': 'Please enter a valid email address to invite',
+                    'success': False
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Insert a new invite
         serializer = self.get_serializer(data=request.data)
@@ -284,38 +285,37 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             # If the user exists send accept invite email
             send_mail(
                 "You are invited!",
-                "{}/{}/{}/{}/{}?token={}".format(
+                "{}/{}/{}/{}/{}?userId={}&token={}".format(
                     "{}/{}/{}".format(request.get_host(), API_PREFIX, DEFAULT_VERSION),
                     "school",
                     self.base_school_id,
                     "invite",
                     "accept",
-                    signing.dumps({'userId': user.id, 'inviteId': invite.id}),
+                    user.id,
+                    signing.dumps({'inviteId': invite.id}),
                 ),
                 "Consensus Admin <from@example.com>", ["{}".format(user.email)])
-            return Response(
-                {
-                    'invite': serializers.serialize('json', [invite, ]),
-                    'description': 'The invitation email successfully sent',
-                    'success': True
-                }, status=201)
+            detail = 'The invitation email successfully sent'
         else:
             # If the user does not exist, send signUp email
             send_mail(
                 "Please singUp!",
-                "{}/{}/#/{}?token={}".format(
-                    request.get_host(),
-                    "static",
+                "{}/{}/#/{}/{}/{}?token={}".format(
+                    "http://localhost:8080",  # request.get_host(),
+                    "",  # "static",
+                    "school",
+                    self.base_school_id,
                     "signUp",
-                    signing.dumps(invite.id),
+                    signing.dumps({'inviteId': invite.id}),
                 ),
                 "Consensus Admin <from@example.com>", ["{}".format(serializer.instance.email)])
-            return Response(
-                {
-                    'invite': serializers.serialize('json', [invite, ]),
-                    'description': 'The signUp email successfully sent',
-                    'success': True
-                }, status=201)
+            detail = 'The signUp email successfully sent'
+        return Response(
+            {
+                'invite': InviteSerializer(invite).data,
+                'detail': detail,
+                'success': True
+            }, status=status.HTTP_201_CREATED)
 
     def perform_update(self, serializer):
         # If the current user is the owner of the given school
@@ -329,25 +329,27 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         # If the current user is the owner of the given school
         participation = self.get_school_participation()
         if participation:
+            if instance.status == Invite.INVITATION_ACCEPT:
+                raise MethodNotAllowed("", "The invite is already accepted")
             instance.delete()
         else:
             raise PermissionDenied
 
     @action(detail=False, methods=['GET'])
     def accept(self, request, *token, **kwargs):
-        # Retrieve userId and InviteId from given token
+        # Retrieve InviteId from given token
         token = unsign(request.GET.get('token', None), max_age=4320)
-        if not token or 'userId' not in token or 'inviteId' not in token:
+        if not token or 'inviteId' not in token or not request.GET.get('userId', None):
             return Response(
                 {
-                    'description': 'Bad token received',
+                    'detail': 'Bad token received',
                     'success': False
                 },
-                status=400
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         # If user and invite exists and invite is pending
-        user = User.objects.filter(id=token.get('userId')).first()
+        user = User.objects.filter(id=request.GET.get('userId')).first()
         invite = Invite.objects.filter(id=token.get('inviteId')).first()
         if user and invite and invite.status == Invite.INVITATION_PENDING:
             # Update invite state
@@ -369,10 +371,18 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                                          participant=user,
                                          participation_date=now)
             # TODO: redirect to signIn page
-            return Response({'success': True}, status=200)
+            return redirect("{}/#/{}".format(
+                    "http://localhost:8080",  # request.get_host(),
+                    "signIn",
+                ))
 
         else:
-            return Response({'description': 'Invalid Invite Or User received', 'success': False}, status=400)
+            return Response(
+                {
+                    'detail': 'Invalid Invite Or User received',
+                    'success': False
+                },
+                status=status.HTTP_400_BAD_REQUEST)
 
 
 class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):

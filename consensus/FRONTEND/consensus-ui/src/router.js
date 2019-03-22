@@ -66,6 +66,11 @@ export default new Router({
       component: SignUp
     },
     {
+      path: "/school/:school_id/signUp",
+      name: "signUp",
+      component: SignUp
+    },
+    {
       path: "/about",
       name: "about",
       // route level code-splitting
