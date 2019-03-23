@@ -15,5 +15,8 @@ export default {
   },
   delete(seasonId, application) {
     return Api.delete(`season/${seasonId}/application/${application.id}`);
-  }
+  },
+   get(id) {
+    return Api.get("application/" + id);
+  },
 };

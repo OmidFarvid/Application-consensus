@@ -22,9 +22,11 @@ from apps.user.views import LoginView, IndexView
 
 from django.conf import settings
 
+
+API_PREFIX = 'api'
 VERSION_PARAM = settings.REST_FRAMEWORK.get('VERSION_PARAM', 'version')
 DEFAULT_VERSION = settings.REST_FRAMEWORK.get('DEFAULT_VERSION', 'v1')
-API_ENDPOINT = 'api/(?P<{}>v\d+)'.format(VERSION_PARAM)
+API_ENDPOINT = '{}/(?P<{}>v\d+)'.format(API_PREFIX, VERSION_PARAM)
 
 
 urlpatterns = [

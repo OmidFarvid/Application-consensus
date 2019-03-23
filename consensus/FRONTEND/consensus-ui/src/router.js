@@ -7,6 +7,7 @@ import SeasonHome from "./components/school/season/SeasonHome";
 import Schools from "./components/school/Schools.vue";
 import SignIn from "./components/SignIn.vue";
 import SignUp from "./components/SignUp.vue";
+import Rate from "./components/school/Rate.vue";
 
 import store from "./store.js";
 
@@ -72,7 +73,12 @@ export default new Router({
       // this generates a separate chunk (about.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () =>
-        import(/* webpackChunkName: "about" */ "./components/About.vue")
-    }
+          import(/* webpackChunkName: "about" */ "./components/About.vue")
+    },
+    {
+      path: "/school/:school_id/season/:season_id/application/application_id/rate",
+      name: "rate",
+      component: Rate
+    },
   ]
 });

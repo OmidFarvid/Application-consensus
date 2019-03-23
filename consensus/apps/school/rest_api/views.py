@@ -12,8 +12,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-
 from consensus.helpers.shortcuts import unsign
+from consensus.urls import API_PREFIX, DEFAULT_VERSION
 
 
 class SchoolBasedViewMixin(object):
@@ -285,17 +285,17 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             send_mail(
                 "You are invited!",
                 "{}/{}/{}/{}/{}?token={}".format(
-                    request.get_host(),
+                    "{}/{}/{}".format(request.get_host(), API_PREFIX, DEFAULT_VERSION),
                     "school",
                     self.base_school_id,
                     "invite",
                     "accept",
-                    signing.dumps((invite.id, user.id)),
+                    signing.dumps({'userId': user.id, 'inviteId': invite.id}),
                 ),
                 "Consensus Admin <from@example.com>", ["{}".format(user.email)])
             return Response(
                 {
-                    'invite': serializers.serialize('json', [ invite, ]),
+                    'invite': serializers.serialize('json', [invite, ]),
                     'description': 'The invitation email successfully sent',
                     'success': True
                 }, status=201)
@@ -334,6 +334,46 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             raise PermissionDenied
 
     @action(detail=False, methods=['GET'])
+    def accept(self, request, *token, **kwargs):
+        # Retrieve userId and InviteId from given token
+        token = unsign(request.GET.get('token', None), max_age=4320)
+        if not token or 'userId' not in token or 'inviteId' not in token:
+            return Response(
+                {
+                    'description': 'Bad token received',
+                    'success': False
+                },
+                status=400
+            )
+
+        # If user and invite exists and invite is pending
+        user = User.objects.filter(id=token.get('userId')).first()
+        invite = Invite.objects.filter(id=token.get('inviteId')).first()
+        if user and invite and invite.status == Invite.INVITATION_PENDING:
+            # Update invite state
+            now = datetime.datetime.now()
+            invite.status = Invite.INVITATION_ACCEPT
+            invite.acceptation_date = now
+            invite.save()
+
+            # Create�a�new staff and make participation with the school
+            Staff.objects.create(user=user,
+                                 first_name=user.first_name,
+                                 last_name=user.last_name,
+                                 phone_number=0,
+                                 email=user.email
+                                 )
+            school = School.objects.filter(id=invite.school.id).first()
+            Participation.objects.create(participation_type=Participation.PARTICIPATION_STAFF,
+                                         school=school,
+                                         participant=user,
+                                         participation_date=now)
+            # TODO: redirect to signIn page
+            return Response({'success': True}, status=200)
+
+        else:
+            return Response({'description': 'Invalid Invite Or User received', 'success': False}, status=400)
+
     def accept(self, request, *args, **kwargs):
         # Accept given acceptation
         args = unsign(kwargs['token'], max_age=4320)
@@ -441,7 +481,7 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
             raise PermissionDenied
 
         # All school's applications for the given season
-        return self.queryset.filter(season__school=self.base_season.school)
+        return self.queryset.filter(id=self.id)
 
     def perform_create(self, serializer):
         # If the current user has participation with the given school

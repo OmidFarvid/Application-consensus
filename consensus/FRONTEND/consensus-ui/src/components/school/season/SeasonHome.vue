@@ -121,6 +121,15 @@
             >
               <span class="fa fa-eye"></span></button
             >&nbsp;&nbsp;
+
+            <router-link
+              class="btn btn-default btn-sm"
+              :to="{
+              name: 'rate',
+              params: { school_id:schoolId,season_id:seasonId,application_id: props.rowData.id  }}"
+            >
+              <span class="fa fa-sticky-note"></span></router-link
+            >&nbsp;&nbsp;
           </div>
         </template>
       </vuetable>
@@ -724,6 +733,7 @@ export default {
       });
       this.$refs.scoreModalRef.show();
     },
+
     onApplicationBoxClick: function() {
       this.applicationShown = !this.applicationShown;
       this.enrolledShown = false;
