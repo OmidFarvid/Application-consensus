@@ -255,9 +255,10 @@
                         self.$refs.confirmDeleteModalRef.hide();
                         self.notifySuccess("The invite deleted");
                     },
-                    function () {
+                    function (resp) {
                         self.deletingRecord = false;
                         self.notifyError(
+                            (resp.response && resp.response.data.detail) ||
                             "Some error happened when trying to delete the invite"
                         );
                     }
@@ -275,13 +276,14 @@
                 let self = this;
                 inviteApi.add(self.schoolId, self.selectedInvite).then(
                     function (resp) {
-                        self.inviteData.results.concat(resp.data.invite);
+                        self.inviteData.results.push(resp.data.invite);
                         self.$refs.inviteModalRef.hide();
-                        self.notifySuccess(resp.data.description);
+                        self.notifySuccess(resp.data.detail);
                     },
                     function (resp) {
                         self.notifyError(
-                            (resp.response && resp.response.data.description) || "Some error happened when trying to invite!"
+                            (resp.response && resp.response.data.detail) ||
+                            "Some error happened when trying to invite!"
                         );
                     }
                 );

@@ -70,7 +70,7 @@ class Invite(models.Model):
         (INVITATION_ACCEPT, 'Accept'),
     )
 
-    username = models.CharField(max_length=255, null=True)
+    username = models.CharField(max_length=255, null=True, blank=True)
     school = models.ForeignKey(
         School,
         related_name='invite',

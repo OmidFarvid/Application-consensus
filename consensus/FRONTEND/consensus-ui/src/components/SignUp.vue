@@ -106,6 +106,7 @@
                         pattern="[+][0-9]{10,12}"
                         v-model="registerFields.phone_number"
                         placeholder="Write down your phone number"
+                        title="Please enter a phone number"
                       />
                     </div>
                   </div>
@@ -160,6 +161,7 @@
 
 <script>
 import SessionApi from "@/endpoint/SessionApi";
+import InviteApi from "@/endpoint/InviteApi";
 import UtilMixin from "@/mixins/UtilMixin";
 import countryApi from "@/endpoint/CountryApi";
 
@@ -194,8 +196,16 @@ export default {
 
       let self = this;
       SessionApi.signUp(this.registerFields).then(
-        function() {
-          self.$router.push("/");
+        function(resp) {
+          if(self.$route.query.token && self.$route.params.school_id){
+            window.location.href = InviteApi.acceptInviteUrl(
+                self.$route.params.school_id,
+                resp.data.id,
+                self.$route.query.token
+            );
+          }else{
+              self.$router.push("/");
+          }
         },
         function(error) {
           self.notifyDefaultServerError(error);
