@@ -122,19 +122,23 @@
               <span class="fa fa-eye"></span></button
             >&nbsp;&nbsp;
 
-            <router-link
+            <button
               class="btn btn-default btn-sm"
-              :to="{
-              name: 'rate',
-              params: { school_id:schoolId,season_id:seasonId,application_id: props.rowData.id  }}"
+               @click="showRateModal()"
             >
-              <span class="fa fa-sticky-note"></span></router-link
+              <span class="fa fa-sticky-note"></span></button
             >&nbsp;&nbsp;
           </div>
         </template>
       </vuetable>
     </div>
     <!-- End Enrolled Application -->
+
+
+    <Rate
+    v-show="isRateModalVisible"
+    />
+
 
     <b-modal
       size="lg"
@@ -525,6 +529,7 @@ import applicationApi from "../../../endpoint/ApplicationApi";
 import ApplicationStatus from "../model/ApplicationStatus";
 import ScoresApi from "@/endpoint/ScoresApi";
 import dateTime from "../../dateTimePicker/DateTimePicker";
+import Rate from "../Rate";
 
 let reviewActionField = {
   name: "__slot:review_actions",
@@ -544,7 +549,8 @@ export default {
     Vuetable,
     dateTime,
     VuetablePagination,
-    "b-modal": bModal
+    "b-modal": bModal,
+    Rate,
   },
   created: function() {
     this.$eventsBus.$emit("header:title", "School's season");
@@ -563,6 +569,7 @@ export default {
         newEnrolled: 0,
         newApplication: 0
       },
+      isRateModalVisible: false,
       newScore: {},
       newApp: {},
       review: {},
@@ -733,6 +740,17 @@ export default {
       });
       this.$refs.scoreModalRef.show();
     },
+
+    /*rateButtonClick:function(application){
+      alert(application.id)
+    },*/
+
+    showRateModal:function() {
+        this.isRateModalVisible = true;
+      },
+      closeRateModal:function() {
+        this.isRateModalVisible = false;
+      },
 
     onApplicationBoxClick: function() {
       this.applicationShown = !this.applicationShown;
