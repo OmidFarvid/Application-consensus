@@ -134,17 +134,18 @@ class Application(models.Model):
 
 
 @reversion.register()
-class Score(models.Model):
+class Review(models.Model):
     application = models.ForeignKey(
         Application,
-        related_name='score',
+        related_name='review',
         on_delete=models.CASCADE
     )
 
     staff = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
 
-    score_date = models.DateTimeField(auto_now_add=True, null=True)
+    review_date = models.DateTimeField(auto_now_add=True, null=True)
     score = models.IntegerField(null=True, blank=True)
+    note = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return self.score
+        return self.review_date

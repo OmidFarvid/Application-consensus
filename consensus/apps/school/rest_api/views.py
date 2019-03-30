@@ -2,8 +2,8 @@ import datetime
 import re
 from django.core import serializers
 from django.core import signing
-from apps.school.models import School, Application, Score, Season, Staff, Participation, Invite, User
-from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ScoreSerializer, SeasonSerializer, \
+from apps.school.models import School, Application, Review, Season, Staff, Participation, Invite, User
+from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ReviewSerializer, SeasonSerializer, \
     StaffSerializer, InviteSerializer
 from django.core.mail import send_mail
 from django.db.models import Q
@@ -492,11 +492,12 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
             raise PermissionDenied
 
 
-class ScoreView(ApplicationBasedViewMixin, viewsets.ModelViewSet):
-    queryset = Score.objects.all()
-    serializer_class = ScoreSerializer
-    ordering = 'score_date'
+class ReviewView(ApplicationBasedViewMixin, viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    ordering = 'review_date'
     ordering_fields = '__all__'
+    pagination_class = None
 
     def perform_create(self, serializer):
-        return serializer.save(staff=self.request.user)
+        return serializer.save(staff=self.request.user, review_date=datetime.datetime.now())

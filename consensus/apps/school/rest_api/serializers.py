@@ -67,7 +67,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
         model = models.Application
 
 
-class ScoreSerializer(serializers.ModelSerializer):
+class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
-        model = models.Score
+        model = models.Review
