@@ -761,7 +761,6 @@
                     this.selectedReview.application = this.selectedApplication.id;
                     ReviewsApi.add(this.selectedApplication.id, this.selectedReview).then(
                         function () {
-                            debugger;
                             self.notifySuccess("The review submitted");
                             self.reAssignData();
                             self.$refs.reviewAppModalRef.hide();
