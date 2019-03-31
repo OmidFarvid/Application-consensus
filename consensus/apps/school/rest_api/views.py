@@ -1,6 +1,5 @@
 import datetime
 import re
-from django.core import serializers
 from django.core import signing
 from apps.school.models import School, Application, Review, Season, Staff, Participation, Invite, User
 from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ReviewSerializer, SeasonSerializer, \
@@ -10,7 +9,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied, MethodNotAllowed
+from rest_framework.exceptions import PermissionDenied, MethodNotAllowed, NotAcceptable
 from rest_framework.response import Response
 from consensus.helpers.shortcuts import unsign
 from consensus.urls import API_PREFIX, DEFAULT_VERSION
@@ -499,5 +498,55 @@ class ReviewView(ApplicationBasedViewMixin, viewsets.ModelViewSet):
     ordering_fields = '__all__'
     pagination_class = None
 
+    def get_queryset(self):
+        # If the current user has participation with the given school
+        participation = Participation.objects.filter(
+            school=self.base_application.season.school,
+            participant=self.request.user
+        ).first()
+        if not participation:
+            raise PermissionDenied
+
+        # All application's reviews
+        return self.queryset.filter(application=self.base_application_id)
+
     def perform_create(self, serializer):
-        return serializer.save(staff=self.request.user, review_date=datetime.datetime.now())
+        # If the current user has participation with the given school
+        participation = Participation.objects.filter(
+            school=self.base_application.season.school,
+            participant=self.request.user
+        ).first()
+        if participation:
+            # If the current user already reviewed this application
+            reviews = Review.objects.filter(application=self.base_application_id, user=self.request.user).all()
+            if reviews.count() != 0:
+                raise NotAcceptable("The user already reviewed this application")
+            serializer.save(user=self.request.user, review_date=datetime.datetime.now())
+            # Make the application reviewed
+            application = Application.objects.filter(id=self.base_application_id).first()
+            application.status = Application.STATUS_REVIEWED
+            application.save()
+        else:
+            raise PermissionDenied
+
+    def perform_update(self, serializer):
+        # If the current user has participation with the given school
+        participation = Participation.objects.filter(
+            school=self.base_application.season.school,
+            participant=self.request.user
+        ).first()
+        if participation:
+            serializer.save()
+        else:
+            raise PermissionDenied
+
+    def perform_destroy(self, instance):
+        # If the current user has participation with the given school
+        participation = Participation.objects.filter(
+            school=self.base_application.season.school,
+            participant=self.request.user
+        ).first()
+        if participation:
+            instance.delete()
+        else:
+            raise PermissionDenied

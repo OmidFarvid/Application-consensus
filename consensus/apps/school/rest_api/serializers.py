@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from apps.school import models
-from apps.school.models import Participation, School, Application, Staff, Invite
+from apps.school.models import Participation, School, Application, Staff, Invite, User
 import datetime
 
 
@@ -68,6 +68,13 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+
+    reviewer_full_name = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_reviewer_full_name(review):
+        return '{} {}'.format(review.user.first_name, review.user.last_name)
+
     class Meta:
         fields = '__all__'
         model = models.Review

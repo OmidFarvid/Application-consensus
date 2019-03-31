@@ -1,7 +1,7 @@
 const applicationStatus = {
-  Scored: "scored",
-  Pending: "pending",
-  Enrolled: "enrolled"
+  Reviewed: "r",
+  Pending: "p",
+  Enrolled: "e"
 };
 
 export default Object.freeze(applicationStatus);

@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('score', models.IntegerField(blank=True, null=True)),
                 ('note', models.CharField(blank=True, max_length=255, null=True)),
                 ('application', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='review', to='school.Application')),
-                ('staff', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.RemoveField(
