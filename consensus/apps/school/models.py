@@ -113,6 +113,15 @@ class Application(models.Model):
         (GENDER_FEMALE, 'Female'),
     )
 
+    STATUS_PENDING = 'p'
+    STATUS_REVIEWED = 'r'
+    STATUS_ENROLLED = 'e'
+    STATUS_CHOICES = (
+        (STATUS_PENDING, 'Pending'),
+        (STATUS_REVIEWED, 'Reviewed'),
+        (STATUS_ENROLLED, 'Enrolled'),
+    )
+
     season = models.ForeignKey(
         Season,
         related_name='application',
@@ -127,24 +136,25 @@ class Application(models.Model):
     info = models.CharField(max_length=255, null=True, blank=True)
     educational_info = models.CharField(max_length=255, null=True, blank=True)
     created_date = models.DateTimeField(auto_now_add=True, null=True)
-    status = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField('Status', max_length=1, choices=STATUS_CHOICES, default=STATUS_PENDING)
 
     def __str__(self):
         return self.first_name
 
 
 @reversion.register()
-class Score(models.Model):
+class Review(models.Model):
     application = models.ForeignKey(
         Application,
-        related_name='score',
+        related_name='review',
         on_delete=models.CASCADE
     )
 
-    staff = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, editable=False)
 
-    score_date = models.DateTimeField(auto_now_add=True, null=True)
+    review_date = models.DateTimeField(auto_now_add=True, null=True)
     score = models.IntegerField(null=True, blank=True)
+    note = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return self.score
+        return self.review_date.strftime("%H:%M:%S.%f - %b %d %Y")
