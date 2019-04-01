@@ -464,7 +464,7 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
             participant=self.request.user
         ).first()
         if participation:
-            serializer.save()
+            serializer.save(status=Application.STATUS_PENDING, created_date=datetime.datetime.now())
         else:
             raise PermissionDenied
 
