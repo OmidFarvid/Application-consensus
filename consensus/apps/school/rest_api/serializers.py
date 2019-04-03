@@ -9,10 +9,16 @@ class SchoolSerializer(serializers.ModelSerializer):
     staff_count = serializers.SerializerMethodField()
     season_count = serializers.SerializerMethodField()
     application_count = serializers.SerializerMethodField()
+    participant_status = serializers.SerializerMethodField()
 
     @staticmethod
     def get_staff_count(school):
         return Staff.objects.filter(user__participation__school=school).count()
+
+    @staticmethod
+    def get_participant_status(school):
+        return Participation.objects.values_list('participation_type')\
+            .filter(school=school, user=1).all()
 
     @staticmethod
     def get_season_count(school):

@@ -86,13 +86,13 @@ class SchoolView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # All schools that the current user has participation with them
-        return self.queryset.filter(participation__participant=self.request.user.id)
+        return self.queryset.filter(participation__user=self.request.user.id)
 
     def perform_update(self, serializer):
         # If the current user is the owner of the given school
         participation = Participation.objects.filter(
             school=serializer.instance,
-            participant=self.request.user,
+            user=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
         if participation:
@@ -104,7 +104,7 @@ class SchoolView(viewsets.ModelViewSet):
         # If the current user is the owner of the given school
         participation = Participation.objects.filter(
             school=instance,
-            participant=self.request.user,
+            user=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
         if participation:
@@ -123,7 +123,7 @@ class StaffView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         # If the current user is the owner of the given school
         participation = Participation.objects.filter(
             school=self.base_school_id,
-            participant=self.request.user,
+            user=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
         if not participation:
@@ -140,7 +140,7 @@ class StaffView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         # If the current user is the owner of the given school
         participation = Participation.objects.filter(
             school=self.base_school_id,
-            participant=self.request.user,
+            user=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
         if participation:
@@ -152,7 +152,7 @@ class StaffView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         # If the current user is the owner of the given school
         participation = Participation.objects.filter(
             school=self.base_school_id,
-            participant=self.request.user,
+            user=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
         if participation:
@@ -164,7 +164,7 @@ class StaffView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         # If the current user is the owner of the given school
         participation = Participation.objects.filter(
             school=self.base_school_id,
-            participant=self.request.user,
+            user=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
         if participation:
@@ -193,7 +193,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
     def get_school_participation(self):
         participation = Participation.objects.filter(
             school=self.base_school_id,
-            participant=self.request.user,
+            user=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
         return participation
@@ -367,7 +367,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             school = School.objects.filter(id=invite.school.id).first()
             Participation.objects.create(participation_type=Participation.PARTICIPATION_STAFF,
                                          school=school,
-                                         participant=user,
+                                         user=user,
                                          participation_date=now)
             # TODO: redirect to signIn page
             return redirect("{}/#/{}".format(
@@ -394,7 +394,7 @@ class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         # If the current user has participation with the given school
         participation = Participation.objects.filter(
             school=self.base_school_id,
-            participant=self.request.user
+            user=self.request.user
         ).first()
         if not participation:
             raise PermissionDenied
@@ -406,7 +406,7 @@ class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         # If the current user is the owner of the given school
         participation = Participation.objects.filter(
             school=self.base_school_id,
-            participant=self.request.user,
+            user=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
         if participation:
@@ -418,7 +418,7 @@ class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         # If the current user is the owner of the given school
         participation = Participation.objects.filter(
             school=self.base_school_id,
-            participant=self.request.user,
+            user=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
         if participation:
@@ -430,7 +430,7 @@ class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         # If the current user is the owner of the given school
         participation = Participation.objects.filter(
             school=self.base_school_id,
-            participant=self.request.user,
+            user=self.request.user,
             participation_type=Participation.PARTICIPATION_OWNER
         ).first()
         if participation:
@@ -449,7 +449,7 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
         # If the current user has participation with the given school
         participation = Participation.objects.filter(
             school=self.base_season.school,
-            participant=self.request.user
+            user=self.request.user
         ).first()
         if not participation:
             raise PermissionDenied
@@ -461,7 +461,7 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
         # If the current user has participation with the given school
         participation = Participation.objects.filter(
             school=self.base_season.school,
-            participant=self.request.user
+            user=self.request.user
         ).first()
         if participation:
             serializer.save(status=Application.STATUS_PENDING, created_date=datetime.datetime.now())
@@ -472,7 +472,7 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
         # If the current user has participation with the given school
         participation = Participation.objects.filter(
             school=self.base_season.school,
-            participant=self.request.user
+            user=self.request.user
         ).first()
         if participation:
             serializer.save()
@@ -483,7 +483,7 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
         # If the current user has participation with the given school
         participation = Participation.objects.filter(
             school=self.base_season.school,
-            participant=self.request.user
+            user=self.request.user
         ).first()
         if participation:
             instance.delete()

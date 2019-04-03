@@ -69,6 +69,67 @@
         </vuetable>
       </div>
     </div>
+
+    <div class="row row-no-padding">
+      <div class="col">
+        <vuetable
+          ref="vuetable"
+          :api-url="tableUrl"
+          :fields="tableFields"
+          :css="css.table"
+          class="school-table"
+          detail-row-component="school-seasons"
+          :query-params="{
+            sort: 'order_by',
+            page: 'page',
+            perPage: 'page_size'
+          }"
+          data-path="results"
+          pagination-path="pagination"
+          @vuetable:pagination-data="onPaginationData"
+        >
+          <template slot="actions" scope="props">
+            <router-link
+              class="btn btn-info btn-sm"
+              :to="{ name: 'school.home', params: { id: props.rowData.id } }"
+            >
+              <span class="fa fa-eye"></span>
+            </router-link>
+            &nbsp;&nbsp;
+            <button
+              class="btn btn-warning btn-sm"
+              @click="editRow(props.rowData)"
+            >
+              <span class="glyphicon glyphicon-pencil"></span></button
+            >&nbsp;&nbsp;
+            <button
+              class="btn btn-danger btn-sm"
+              @click="showConfirmDeleteModal(props.rowData)"
+            >
+              <span class="glyphicon glyphicon-trash"></span>
+            </button>
+          </template>
+          <template slot="toggle" scope="props">
+            <div class="table-button-container">
+              <button
+                class="btn btn-info btn-sm"
+                @click="toggle(props.rowData)"
+              >
+                <span
+                  v-bind:class="[
+                    'fa',
+                    $refs.vuetable.isVisibleDetailRow(props.rowData.id)
+                      ? 'fa-angle-down'
+                      : 'fa-angle-right'
+                  ]"
+                ></span></button
+              >&nbsp;&nbsp;
+            </div>
+          </template>
+        </vuetable>
+      </div>
+    </div>
+
     <div class="row row-no-padding">
       <div class="col">
         <vuetable-pagination
