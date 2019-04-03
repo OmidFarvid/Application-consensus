@@ -225,32 +225,6 @@
                   </div>
                 </div>
               </div>
-
-              <hr/>
-              <div class="row">
-                <div class="col-md-6 col-sm-6 col-xs-6">
-                  <label> Or search and add by username</label>
-                  <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                      <div class="input-group-text">
-                        <i class="fa fa-search"></i>
-                      </div>
-                    </div>
-                    <input type="text" class="form-control"/>
-                  </div>
-                </div>
-                <div class="col-md-6 col-sm-6 col-xs-6">
-                  <label> Or search and add by email</label>
-                  <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                      <div class="input-group-text">
-                        <i class="fa fa-search"></i>
-                      </div>
-                    </div>
-                    <input type="text" class="form-control"/>
-                  </div>
-                </div>
-              </div>
             </form>
           </div>
         </div>
@@ -658,11 +632,6 @@
             },
             submitApplication: function () {
                 let self = this;
-                self.selectedApplication.status = "pending";
-                self.selectedApplication.created_date = new Date()
-                    .toJSON()
-                    .slice(0, 10)
-                    .replace(/-/g, "-");
                 self.selectedApplication.season = self.seasonId;
                 applicationApi.add(this.seasonId, self.selectedApplication).then(
                     function () {
