@@ -51,13 +51,13 @@
               class="btn btn-warning btn-sm"
               @click="editRow(props.rowData)"
             >
-              <span class="glyphicon glyphicon-pencil"></span> Edit</button
+              <span class="glyphicon glyphicon-pencil"></span></button
             >&nbsp;&nbsp;
             <button
               class="btn btn-danger btn-sm"
               @click="showConfirmDeleteModal(props.rowData)"
             >
-              <span class="glyphicon glyphicon-trash"></span> Delete</button
+              <span class="glyphicon glyphicon-trash"></span></button
             >&nbsp;&nbsp;
           </div>
         </template>

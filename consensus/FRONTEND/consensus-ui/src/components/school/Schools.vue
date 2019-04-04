@@ -35,14 +35,14 @@
                                 :to="{ name: 'school.home', params: { id: props.rowData.id } }"
                         >
                             <span class="fa fa-eye"></span>
-                        </router-link>
-                        &nbsp;&nbsp;
+                        </router-link
+                        >&nbsp;
                         <button
                                 class="btn btn-warning btn-sm"
                                 @click="editRow(props.rowData)"
                         >
                             <span class="glyphicon glyphicon-pencil"></span></button
-                        >&nbsp;&nbsp;
+                        >&nbsp;
                         <button
                                 class="btn btn-danger btn-sm"
                                 @click="showConfirmDeleteModal(props.rowData)"
@@ -275,7 +275,6 @@
             reAssignData: function () {
                 let self = this;
                 schoolApi.getAll().then(function (response) {
-                    debugger;
                     self.seasonData = response.data;
                     self.fragmentationSchool(response.data.results);
                 }, function (resp) {
@@ -287,17 +286,16 @@
             },
 
             fragmentationSchool: function (schools) {
-                debugger;
                 let self = this;
                 schools.forEach(function (school) {
-                    school.participant_status.forEach(status)
-                    {
-                        if (status.includes(ParticipationStatus.OWNER)) {
+                   // school.participant_status.forEach(status)
+                    //{
+                     //   if (status.includes(ParticipationStatus.OWNER)) {
                             self.ownedSchools.push(school);
-                        } else {
-                            self.staffedSchools.push(school);
-                        }
-                    }
+                      //  } else {
+                       //     self.staffedSchools.push(school);
+                        //}
+                   // }
                 });
             },
         }

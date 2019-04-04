@@ -47,18 +47,6 @@
       >
         <template slot="actions" scope="props">
           <div class="table-button-container">
-            <button
-              class="btn btn-warning btn-sm"
-              @click="editRow(props.rowData)"
-            >
-              <span class="glyphicon glyphicon-pencil"></span></button
-            >&nbsp;
-            <button
-              class="btn btn-danger btn-sm"
-              @click="showConfirmDeleteModal(props.rowData)"
-            >
-              <span class="glyphicon glyphicon-trash"></span></button
-            >&nbsp;
             <router-link
               class="btn btn-info btn-sm"
               :to="{
@@ -68,6 +56,20 @@
             >
               <span class="fa fa-eye"></span>
             </router-link>
+            &nbsp;&nbsp;
+            <button
+              class="btn btn-warning btn-sm"
+              @click="editRow(props.rowData)"
+            >
+              <span class="glyphicon glyphicon-pencil"></span></button
+            >&nbsp;&nbsp;
+            <button
+              class="btn btn-danger btn-sm"
+              @click="showConfirmDeleteModal(props.rowData)"
+            >
+              <span class="glyphicon glyphicon-trash"></span></button
+            >
+
           </div>
         </template>
       </vuetable>
