@@ -282,18 +282,18 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
 
         if user:
             # If the user exists send accept invite email
-            send_mail(
-                "You are invited!",
-                "{}/{}/{}/{}/{}?userId={}&token={}".format(
-                    "{}/{}/{}".format(request.get_host(), API_PREFIX, DEFAULT_VERSION),
-                    "school",
-                    self.base_school_id,
-                    "invite",
-                    "accept",
-                    user.id,
-                    signing.dumps({'inviteId': invite.id}),
-                ),
-                "Consensus Admin <from@example.com>", ["{}".format(user.email)])
+            # send_mail(
+            #     "You are invited!",
+            #     "{}/{}/{}/{}/{}?userId={}&token={}".format(
+            #         "{}/{}/{}".format(request.get_host(), API_PREFIX, DEFAULT_VERSION),
+            #         "school",
+            #         self.base_school_id,
+            #         "invite",
+            #         "accept",
+            #         user.id,
+            #         signing.dumps({'inviteId': invite.id}),
+            #     ),
+            #     "Consensus Admin <from@example.com>", ["{}".format(user.email)])
             detail = 'The invitation email successfully sent'
         else:
             # If the user does not exist, send signUp email
@@ -382,6 +382,10 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                     'success': False
                 },
                 status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['GET'])
+    def resend(self, instance):
+        return True
 
 
 class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):

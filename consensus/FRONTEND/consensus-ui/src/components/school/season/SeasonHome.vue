@@ -2,12 +2,26 @@
   <section class="container-fluid">
     <div class="row row-no-padding justify-content-end">
       <div class="col-md-4 col-sm-4 col-xs-4">
-        <button
+        <div class="row">
+          <div class="col-12">
+            <button
             class="btn btn-block btn-success"
             @click="showNewApplicationModal()"
         >
           <i class="glyphicon glyphicon-ok"></i> Submit a new application
         </button>
+          </div>
+        </div>
+          <div class="row">
+          <div class="col-12">
+            <button
+            class="btn btn-block btn-info"
+            @click="uploadNewApplicationsModal()"
+        >
+          <i class="glyphicon glyphicon-ok"></i> Upload new applications
+        </button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="row row-no-padding">
@@ -131,8 +145,135 @@
     <b-modal
         size="lg"
         centered
-        ref="newApplicationModalRef"
+        ref="uploadApplicationsModalRef"
         id="newAModal"
+        title="Upload new applications"
+        :header-bg-variant="'modal-header padding-10 background-light-silver'"
+        :footer-bg-variant="
+        'modal-footer padding-10 background-light-silver border-bottom-right-radius-10 border-bottom-left-radius-10'
+      "
+        :aria-required="false"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-body">
+            <form>
+              <div class="row">
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <div class="form-group">
+                    <label class="pull-left">First Name</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="selectedApplication.first_name"
+                    />
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <div class="form-group">
+                    <label class="pull-left">Last Name</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="selectedApplication.last_name"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <div class="form-group">
+                    <label class="pull-left">Birthday</label>
+                    <dateTime v-model="selectedApplication.date_of_birth"></dateTime>
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <div class="form-group">
+                    <label class="pull-left">Gender</label>
+                    <select class="form-control" v-model="selectedApplication.gender">
+                      <option value="m">Male</option>
+                      <option value="f">Female</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <div class="form-group">
+                    <label class="pull-left">Email</label>
+                    <input
+                        type="email"
+                        class="form-control"
+                        v-model="selectedApplication.email"
+                    />
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <div class="form-group">
+                    <label class="pull-left">Phone Number</label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        v-model="selectedApplication.phone_number"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <div class="form-group">
+                    <label class="pull-left">Info</label>
+                    <textarea
+                        class="form-control"
+                        v-model="selectedApplication.info"
+                    ></textarea>
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                  <div class="form-group">
+                    <label class="pull-left">Educational Info</label>
+                    <textarea
+                        class="form-control"
+                        v-model="selectedApplication.educational_info"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div slot="modal-footer" class="w-100">
+        <div class="row row-no-padding width-full">
+          <div class="col-md-4 col-sm-4 col-xs-12">
+            <button
+                v-on:click="submitApplication"
+                type="button"
+                class="btn btn-success btn-block"
+            >
+              <i class="glyphicon glyphicon-ok"></i> Add Application
+            </button>
+          </div>
+          <div class="col-md-3 col-sm-3 col-xs-12">
+            <button
+                type="button"
+                class="btn btn-danger btn-block"
+                data-dismiss="modal"
+                @click="$refs.newApplicationModalRef.hide()"
+            >
+              <i class="fa fa-close"></i> Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </b-modal>
+
+    <!-- New Application Modal-->
+    <b-modal
+        size="lg"
+        centered
+        ref="newApplicationModalRef"
+        id="uploadAModal"
         title="Add a new application"
         :header-bg-variant="'modal-header padding-10 background-light-silver'"
         :footer-bg-variant="
@@ -563,6 +704,10 @@
             showNewApplicationModal: function () {
                 this.selectedApplication = {};
                 this.$refs.newApplicationModalRef.show();
+            },
+          uploadNewApplicationsModal: function () {
+                this.selectedApplication = {};
+                this.$refs.uploadApplicationsModalRef.show();
             },
             reAssignData: function () {
                 let self = this;

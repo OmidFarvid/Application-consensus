@@ -47,6 +47,13 @@
       >
         <template slot="actions" scope="props">
           <div class="table-button-container">&nbsp;&nbsp;
+             <button
+                class="btn btn-info btn-sm"
+                @click="showConfirmResendModal(props.rowData)"
+            >
+              <span class="glyphicon glyphicon-repeat"></span> Resend
+            </button
+            >&nbsp;&nbsp;
             <button
                 class="btn btn-danger btn-sm"
                 @click="showConfirmDeleteModal(props.rowData)"
@@ -58,6 +65,7 @@
         </template>
       </vuetable>
     </div>
+<!--     Invite modal -->
     <b-modal
         size="lg"
         centered
@@ -135,6 +143,8 @@
         </div>
       </div>
     </b-modal>
+    
+    <!-- confirm delete Invite modal -->
     <b-modal
         centered
         ref="confirmDeleteModalRef"
@@ -161,6 +171,37 @@
           ></i>
           <span v-show="!deletingRecord">Delete</span>
           <span v-show="deletingRecord">Deleting</span>
+        </button>
+      </div>
+    </b-modal>
+    
+    <!-- confirm resend Invite modal -->
+    <b-modal
+        centered
+        ref="confirmResendModalRef"
+        id="confirmResendModal"
+        :hide-header="true"
+    >
+      <p class="text-info h6">Are you sure to resend invitation?</p>
+      <div slot="modal-footer" class="w-100">
+        <button
+            type="button"
+            class="btn btn-secondary float-left"
+            @click="$refs.confirmResendModalRef.hide()"
+        >
+          <i class="la la-close"></i> Cancel
+        </button>
+        <button
+            type="button"
+            class="btn btn-info float-right"
+            :disabled="resendingRecord"
+            @click="resendInvite()"
+        >
+          <i
+              :class="resendingRecord ? 'la la-spin la-spinner' : 'la la-trash'"
+          ></i>
+          <span v-show="!resendingRecord">Resend</span>
+          <span v-show="resendingRecord">Resending</span>
         </button>
       </div>
     </b-modal>
@@ -199,15 +240,9 @@
                 inviteData: {},
                 tableFields: [
                     {
-                        sortField: "first_name",
-                        name: "first_name",
-                        title: `<span class="icon is-small orange"><i class="fa fa-book color-gray"></i></span> First Name`,
-                        titleClass: "text-left",
-                        dataClass: "text-left"
-                    },
-                    {
-                        name: "last_name",
-                        title: `<span class="icon is-small orange"><i class="fa fa-users color-gray"></i></span> Last Name`,
+                        sortField: "invitation_date",
+                        name: "username",
+                        title: `<span class="icon is-small orange"><i class="fa fa-book color-gray"></i></span> Username`,
                         titleClass: "text-left",
                         dataClass: "text-left"
                     },
@@ -218,14 +253,20 @@
                         dataClass: "text-left"
                     },
                     {
-                        name: "phone_number",
-                        title: `<span class="icon is-small orange"><i class="fa fa-send color-gray"></i></span> Phone Number`,
+                        name: "invitation_date",
+                        title: `<span class="icon is-small orange"><i class="fa fa-send color-gray"></i></span> Invitation Date`,
                         titleClass: "text-left",
                         dataClass: "text-left"
                     },
                     {
-                        name: "user_name",
-                        title: `<span class="icon is-small orange"><i class="fa fa-calendar color-gray"></i></span> User Name`,
+                        name: "acceptation_date",
+                        title: `<span class="icon is-small orange"><i class="fa fa-calendar color-gray"></i></span> Acceptation Date`,
+                        titleClass: "text-left",
+                        dataClass: "text-left"
+                    },
+                         {
+                        name: "status",
+                        title: `<span class="icon is-small orange"><i class="fa fa-calendar color-gray"></i></span> Status`,
                         titleClass: "text-left",
                         dataClass: "text-left"
                     },
@@ -233,6 +274,7 @@
                 ],
                 selectedInvite: {},
                 deletingRecord: false,
+                resendingRecord: false,
                 inviteShown: false
             };
         },
@@ -240,6 +282,10 @@
             showConfirmDeleteModal: function (invite) {
                 this.selectedInvite = invite;
                 this.$refs.confirmDeleteModalRef.show();
+            },
+          showConfirmResendModal: function (invite) {
+                this.selectedInvite = invite;
+                this.$refs.confirmResendModalRef.show();
             },
             deleteInvite: function () {
                 let self = this;
@@ -260,6 +306,29 @@
                         self.notifyError(
                             (resp.response && resp.response.data.detail) ||
                             "Some error happened when trying to delete the invite"
+                        );
+                    }
+                );
+            },
+          resendInvite: function () {
+                let self = this;
+                self.resendingRecord = true;
+
+                inviteApi.resend(self.schoolId, self.selectedInvite).then(
+                    function () {
+                        self.inviteData.results.splice(
+                            self.inviteData.results.indexOf(self.selectedInvite),
+                            1
+                        );
+                        self.resendingRecord = false;
+                        self.$refs.confirmResendModalRef.hide();
+                        self.notifySuccess("The invite resend");
+                    },
+                    function (resp) {
+                        self.resendingRecord = false;
+                        self.notifyError(
+                            (resp.response && resp.response.data.detail) ||
+                            "Some error happened when trying to resend the invite"
                         );
                     }
                 );
