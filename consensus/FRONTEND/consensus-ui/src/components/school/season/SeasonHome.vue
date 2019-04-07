@@ -167,6 +167,15 @@
                                 </div>
                             </div>
                             <div class="row">
+                                <div class="col-1" v-for="index in 8" :key="index">
+                                    <select ref="fieldSelector" :v-model="'selectModel'+index" :id="'fieldSelector' + index" @change="refreshFieldSelectors">
+                                        <option v-for="field in applicationFields" v-bind:key="field.name">
+                                            {{field.name}}
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div id="dvCSV"></div>
                             </div>
                         </form>
@@ -535,8 +544,15 @@
                     newEnrolled: 0,
                     newApplication: 0
                 },
-                applicationFields:[
-                    "1","2"
+                applicationFields: [
+                    {name: "1", selected: false},
+                    {name: "2", selected: false},
+                    {name: "3", selected: false},
+                    {name: "4", selected: false},
+                    {name: "5", selected: false},
+                    {name: "6", selected: false},
+                    {name: "7", selected: false},
+                    {name: "8", selected: false},
                 ],
                 scores: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                 selectedReview: {},
@@ -834,20 +850,50 @@
                     );
                 }
             },
+            changeSelectedFields(e){
+                console.log(e.target.selectedOptions[0].text);
+            },
+            refreshFieldSelectors: function(){
+                let self = this;
+                let selectors = self.$refs.fieldSelector;
+                debugger;
+                selectors.forEach(function(selector){
+                    self.applicationFields.forEach( function(field){
+                        //alert(field.name);
+                    })
+                })
+            },
             onFileChange: function () {
+                let self = this;
                 let fileUpload = document.getElementById("fileUpload");
                 let regex = /^([a-zA-Z0-9\s_\\.\-:])+(.csv|.txt)$/;
                 if (regex.test(fileUpload.value.toLowerCase())) {
                     if (typeof (FileReader) != "undefined") {
                         let reader = new FileReader();
                         reader.onload = function (e) {
+                            debugger;
+                            let fields = self.applicationFields;
                             let table = document.createElement("table");
                             table.classList.add("vuetable");
                             table.classList.add("table");
                             table.classList.add("table-striped");
                             table.classList.add("table-bordered");
+                            let fieldsRow = table.insertRow(-1);
                             let rows = e.target.result.split("\n");
-                            for (let i = 0; i < rows.length; i++) {
+                            let cellsCount = rows[0].split(",").length;
+                            for (let i = 0; i < cellsCount; i++) {
+                                let cell = fieldsRow.insertCell(-1);
+                                let select = document.createElement("select");
+                                cell.appendChild(select);
+                                fields.forEach(function (field) {
+                                    let option = document.createElement("option");
+                                    select.appendChild(option);
+                                    option.value = field.fieldName;
+                                    option.text = field.fieldName;
+                                })
+                            }
+
+                            for (let i = 0; i < rows.length - 1; i++) {
                                 let cells = rows[i].split(",");
                                 if (cells.length > 1) {
                                     let row = table.insertRow(-1);
@@ -860,8 +906,9 @@
                             let dvCSV = document.getElementById("dvCSV");
                             dvCSV.innerHTML = "";
                             dvCSV.appendChild(table);
+
                         }
-                        reader.readAsText(fileUpload.files[0]);
+                        reader.readAsText(fileUpload.files[0].slice(0, 1000));
                     } else {
                         alert("This browser does not support HTML5.");
                     }
@@ -891,5 +938,10 @@
 
     input[type=number]::-webkit-inner-spin-button {
         margin-left: 10px;
+    }
+
+    #dvCSV {
+        max-height: 400px;
+        overflow: scroll;
     }
 </style>
