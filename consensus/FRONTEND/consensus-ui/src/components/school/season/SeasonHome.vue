@@ -168,8 +168,8 @@
                             </div>
                             <div class="row">
                                 <div class="col-1" v-for="index in 8" :key="index">
-                                    <select ref="fieldSelector" :v-model="'selectModel'+index" :id="'fieldSelector' + index" @change="refreshFieldSelectors">
-                                        <option v-for="field in applicationFields" v-bind:key="field.name">
+                                    <select ref="fieldSelector" :id="'fieldSelector' + index" @change="refreshFieldSelectors">
+                                        <option v-if="!field.selected || this.$refs.fieldSelector[index].selectedIndex==index" v-for="field in applicationFields" v-bind:key="field.name">
                                             {{field.name}}
                                         </option>
                                     </select>
@@ -545,14 +545,14 @@
                     newApplication: 0
                 },
                 applicationFields: [
-                    {name: "1", selected: false},
-                    {name: "2", selected: false},
-                    {name: "3", selected: false},
-                    {name: "4", selected: false},
-                    {name: "5", selected: false},
-                    {name: "6", selected: false},
-                    {name: "7", selected: false},
-                    {name: "8", selected: false},
+                    {name: "1",index:1, selected: false},
+                    {name: "2",index:2, selected: false},
+                    {name: "3",index:3, selected: false},
+                    {name: "4",index:4, selected: false},
+                    {name: "5",index:5, selected: false},
+                    {name: "6",index:6, selected: false},
+                    {name: "7",index:7, selected: false},
+                    {name: "8",index:8, selected: false},
                 ],
                 scores: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                 selectedReview: {},
@@ -856,12 +856,20 @@
             refreshFieldSelectors: function(){
                 let self = this;
                 let selectors = self.$refs.fieldSelector;
+                let applicationFields = self.applicationFields;
                 debugger;
-                selectors.forEach(function(selector){
-                    self.applicationFields.forEach( function(field){
-                        //alert(field.name);
-                    })
-                })
+                selectors.forEach(function(selector,index){
+                    applicationFields.forEach(function(applicationField){
+                        {
+                            let selectedText = selectors[index].options[selectors[index].selectedIndex].text;
+                            if (applicationField.name == selectedText) {
+                                console.log(applicationField);
+                                applicationField.selected=true;
+                            }
+
+                        }
+                    });
+                    });
             },
             onFileChange: function () {
                 let self = this;
