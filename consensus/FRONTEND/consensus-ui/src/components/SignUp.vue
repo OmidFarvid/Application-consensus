@@ -197,14 +197,14 @@ export default {
       let self = this;
       SessionApi.signUp(this.registerFields).then(
         function(resp) {
-          if(self.$route.query.token && self.$route.params.school_id){
+          if (self.$route.query.token && self.$route.params.school_id) {
             window.location.href = InviteApi.acceptInviteUrl(
-                self.$route.params.school_id,
-                resp.data.id,
-                self.$route.query.token
+              self.$route.params.school_id,
+              resp.data.id,
+              self.$route.query.token
             );
-          }else{
-              self.$router.push("/");
+          } else {
+            self.$router.push("/");
           }
         },
         function(error) {

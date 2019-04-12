@@ -60,6 +60,9 @@ export default {
         .join(",");
     },
     onPaginationData: function(paginationData) {
+      if (!paginationData) {
+        return;
+      }
       paginationData.from =
         (paginationData.current_page - 1) * paginationData.page_size + 1;
       paginationData.to = Math.min(

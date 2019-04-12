@@ -2,13 +2,13 @@
   <section>
     <div class="row row-no-padding justify-content-end">
       <div class="col-md-4 col-sm-4 col-xs-4 ">
-        <button class="btn btn-block btn-primary" @click="addStaff">
-          <i class="fa fa-plus"></i> Add a new Staff
+        <button class="btn btn-block btn-info" @click="addInvite">
+          <i class="fa fa-plus"></i> Invite a new staff
         </button>
       </div>
     </div>
     <div class="row row-no-padding">
-      <div class="col-md-4 justify-content-start">
+      <div class="col-md-4 col-sm-4 col-xs-12">
         <div
           class="boxing"
           v-on:click="staffShown = !staffShown"
@@ -27,13 +27,32 @@
           </div>
         </div>
       </div>
+      <div class="col-md-4 col-sm-4 col-xs-12">
+        <div
+          class="boxing"
+          v-on:click="inviteShown = !inviteShown"
+          v-bind:class="{ active: inviteShown }"
+        >
+          <i class="fa fa-users"></i>
+          <h4>Invites</h4>
+          <div class="info">
+            <div class="left">
+              <h6>
+                School invites :
+                {{ inviteData.results ? inviteData.results.length : 0 }}
+              </h6>
+            </div>
+            <div class="right"></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="row row-no-padding" v-if="staffShown">
       <vuetable
         ref="vuetable"
         :api-mode="false"
         :data="staffData"
-        :fields="tableFields"
+        :fields="staffTableFields"
         :css="css.table"
         class="staff-table"
         :query-params="{
@@ -47,15 +66,10 @@
       >
         <template slot="actions" scope="props">
           <div class="table-button-container">
-            <button
-              class="btn btn-warning btn-sm"
-              @click="editRow(props.rowData)"
-            >
-              <span class="glyphicon glyphicon-pencil"></span> Edit</button
-            >&nbsp;&nbsp;
+            &nbsp;&nbsp;
             <button
               class="btn btn-danger btn-sm"
-              @click="showConfirmDeleteModal(props.rowData)"
+              @click="showConfirmDeleteStaffModal(props.rowData)"
             >
               <span class="glyphicon glyphicon-trash"></span> Delete</button
             >&nbsp;&nbsp;
@@ -63,12 +77,49 @@
         </template>
       </vuetable>
     </div>
+    <div class="row row-no-padding" v-if="inviteShown">
+      <vuetable
+        ref="vuetableRef"
+        :api-mode="false"
+        :data="inviteData"
+        :fields="inviteTableFields"
+        :css="css.table"
+        class="invite-table"
+        :query-params="{
+          sort: 'order_by',
+          page: 'page',
+          perPage: 'page_size'
+        }"
+        data-path="results"
+        pagination-path="pagination"
+        @vuetable:pagination-data="onPaginationData"
+      >
+        <template slot="actions" scope="props">
+          <div class="table-button-container">
+            &nbsp;&nbsp;
+            <button
+              class="btn btn-info btn-sm"
+              @click="showConfirmResendModal(props.rowData)"
+            >
+              <span class="glyphicon glyphicon-repeat"></span> Resend</button
+            >&nbsp;
+            <button
+              class="btn btn-danger btn-sm"
+              @click="showConfirmDeleteInviteModal(props.rowData)"
+            >
+              <span class="glyphicon glyphicon-trash"></span> Delete
+            </button>
+          </div>
+        </template>
+      </vuetable>
+    </div>
+    <!--  Invite modal -->
     <b-modal
       size="lg"
       centered
-      ref="staffModalRef"
-      id="StaffModal"
-      title="Add staff"
+      ref="inviteModalRef"
+      id="InviteModal"
+      title="Add invite"
       :header-bg-variant="'modal-header padding-10 background-light-silver'"
       :footer-bg-variant="
         'modal-footer padding-10 background-light-silver border-bottom-right-radius-10 border-bottom-left-radius-10'
@@ -91,7 +142,7 @@
                     <input
                       type="text"
                       class="form-control"
-                      v-model="selectedStaff.username"
+                      v-model="selectedInvite.username"
                     />
                   </div>
                 </div>
@@ -106,7 +157,7 @@
                     <input
                       type="text"
                       class="form-control"
-                      v-model="selectedStaff.email"
+                      v-model="selectedInvite.email"
                     />
                   </div>
                 </div>
@@ -119,12 +170,12 @@
         <div class="row row-no-padding width-full">
           <div class="col-md-4 col-sm-4 col-xs-12">
             <button
-              v-on:click="inviteStaff"
+              v-on:click="invite"
               type="button"
               class="btn btn-success btn-block"
             >
               <i class="glyphicon glyphicon-ok"></i>
-              Submit Staff
+              Submit Invite
             </button>
           </div>
           <div class="col-md-3 col-sm-3 col-xs-12">
@@ -132,7 +183,7 @@
               type="button"
               class="btn btn-danger btn-block"
               data-dismiss="modal"
-              @click="$refs.staffModalRef.hide()"
+              @click="$refs.inviteModalRef.hide()"
             >
               <i class="fa fa-close"></i> Cancel
             </button>
@@ -140,6 +191,37 @@
         </div>
       </div>
     </b-modal>
+    <!-- Confirm resend invite modal -->
+    <b-modal
+      centered
+      ref="confirmResendModalRef"
+      id="confirmResendModal"
+      :hide-header="true"
+    >
+      <p class="text-info h6">Are you sure to resend invitation?</p>
+      <div slot="modal-footer" class="w-100">
+        <button
+          type="button"
+          class="btn btn-secondary float-left"
+          @click="$refs.confirmResendModalRef.hide()"
+        >
+          <i class="la la-close"></i> Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-info float-right"
+          :disabled="resendingRecord"
+          @click="resendInvite()"
+        >
+          <i
+            :class="resendingRecord ? 'la la-spin la-spinner' : 'la la-trash'"
+          ></i>
+          <span v-show="!resendingRecord">Resend</span>
+          <span v-show="resendingRecord">Resending</span>
+        </button>
+      </div>
+    </b-modal>
+    <!--  Delete confirmation modal -->
     <b-modal
       centered
       ref="confirmDeleteModalRef"
@@ -159,7 +241,7 @@
           type="button"
           class="btn btn-danger float-right"
           :disabled="deletingRecord"
-          @click="deleteStaff()"
+          @click="deleteDataFunction"
         >
           <i
             :class="deletingRecord ? 'la la-spin la-spinner' : 'la la-trash'"
@@ -174,6 +256,7 @@
 
 <script>
 import staffApi from "../../endpoint/StaffApi";
+import inviteApi from "../../endpoint/InviteApi";
 import Vuetable from "vuetable-2/src/components/Vuetable";
 import VuetablePagination from "vuetable-2/src/components/VuetablePagination";
 import bModal from "bootstrap-vue/es/components/modal/modal";
@@ -198,11 +281,14 @@ export default {
     staffApi.getBySchoolId(self.schoolId).then(function(response) {
       self.staffData = response.data;
     });
+    inviteApi.getBySchoolId(self.schoolId).then(function(response) {
+      self.inviteData = response.data;
+    });
   },
   data: function() {
     return {
       staffData: {},
-      tableFields: [
+      staffTableFields: [
         {
           sortField: "first_name",
           name: "first_name",
@@ -236,14 +322,59 @@ export default {
         },
         "__slot:actions"
       ],
+      inviteData: {},
+      inviteTableFields: [
+        {
+          sortField: "invitation_date",
+          name: "username",
+          title: `<span class="icon is-small orange"><i class="fa fa-book color-gray"></i></span> Username`,
+          titleClass: "text-left",
+          dataClass: "text-left"
+        },
+        {
+          name: "email",
+          title: `<span class="icon is-small orange"><i class="fa fa-calendar color-gray"></i></span> Email`,
+          titleClass: "text-left",
+          dataClass: "text-left"
+        },
+        {
+          name: "invitation_date",
+          title: `<span class="icon is-small orange"><i class="fa fa-send color-gray"></i></span> Invitation Date`,
+          titleClass: "text-left",
+          dataClass: "text-left"
+        },
+        {
+          name: "acceptation_date",
+          title: `<span class="icon is-small orange"><i class="fa fa-calendar color-gray"></i></span> Acceptation Date`,
+          titleClass: "text-left",
+          dataClass: "text-left"
+        },
+        {
+          name: "status",
+          title: `<span class="icon is-small orange"><i class="fa fa-calendar color-gray"></i></span> Status`,
+          titleClass: "text-left",
+          dataClass: "text-left"
+        },
+        "__slot:actions"
+      ],
       selectedStaff: {},
+      selectedInvite: {},
+      resendingRecord: false,
       deletingRecord: false,
-      staffShown: false
+      staffShown: false,
+      inviteShown: false,
+      deleteDataFunction: () => {}
     };
   },
   methods: {
-    showConfirmDeleteModal: function(staff) {
+    showConfirmDeleteStaffModal: function(staff) {
       this.selectedStaff = staff;
+      this.deleteDataFunction = this.deleteStaff;
+      this.$refs.confirmDeleteModalRef.show();
+    },
+    showConfirmDeleteInviteModal: function(invite) {
+      this.selectedInvite = invite;
+      this.deleteDataFunction = this.deleteInvite;
       this.$refs.confirmDeleteModalRef.show();
     },
     deleteStaff: function() {
@@ -260,33 +391,79 @@ export default {
           );
           self.notifySuccess("The staff deleted");
         },
-        function() {
+        function(resp) {
           self.deletingRecord = false;
           self.notifyError(
-            "Some error happened when trying to delete the staff"
+            (resp.response && resp.response.data.detail) ||
+              "Some error happened when trying to delete the staff"
           );
         }
       );
     },
-    editRow: function(staff) {
-      this.selectedStaff = staff;
-      this.$refs.staffModalRef.show();
+    addInvite: function() {
+      this.selectedInvite = {};
+      this.$refs.inviteModalRef.show();
     },
-    addStaff: function() {
-      this.selectedStaff = {};
-      this.$refs.staffModalRef.show();
-    },
-    inviteStaff: function() {
+    invite: function() {
       let self = this;
-      staffApi.invite(self.schoolId, self.selectedStaff).then(
+      inviteApi.add(self.schoolId, self.selectedInvite).then(
         function(resp) {
-          self.notifySuccess("The staff invited");
-          self.$refs.staffModalRef.hide();
-          self.staffData.results.push(resp.data);
+          self.inviteData.results.push(resp.data.invite);
+          self.$refs.inviteModalRef.hide();
+          self.notifySuccess(resp.data.detail);
         },
-        function() {
+        function(resp) {
           self.notifyError(
-            "Some error happened when trying to add the new staff"
+            (resp.response && resp.response.data.detail) ||
+              "Some error happened when trying to invite!"
+          );
+        }
+      );
+    },
+    showConfirmResendModal: function(invite) {
+      this.selectedInvite = invite;
+      this.$refs.confirmResendModalRef.show();
+    },
+    resendInvite: function() {
+      let self = this;
+      self.resendingRecord = true;
+
+      inviteApi.resend(self.schoolId, self.selectedInvite).then(
+        function(resp) {
+          self.resendingRecord = false;
+          self.$refs.confirmResendModalRef.hide();
+          self.notifySuccess(
+            (resp.data && resp.data.detail) || "The invitation resent"
+          );
+        },
+        function(resp) {
+          self.resendingRecord = false;
+          self.notifyError(
+            (resp.response && resp.response.data.detail) ||
+              "Some error happened when trying to resend the invitation"
+          );
+        }
+      );
+    },
+    deleteInvite: function() {
+      let self = this;
+      self.deletingRecord = true;
+
+      inviteApi.delete(self.schoolId, self.selectedInvite).then(
+        function() {
+          self.inviteData.results.splice(
+            self.inviteData.results.indexOf(self.selectedInvite),
+            1
+          );
+          self.deletingRecord = false;
+          self.$refs.confirmDeleteModalRef.hide();
+          self.notifySuccess("The invite deleted");
+        },
+        function(resp) {
+          self.deletingRecord = false;
+          self.notifyError(
+            (resp.response && resp.response.data.detail) ||
+              "Some error happened when trying to delete the invite"
           );
         }
       );
@@ -297,6 +474,12 @@ export default {
 
 <style>
 .staff-table {
+  margin-top: 15px;
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+.invite-table {
   margin-top: 15px;
   margin-left: 15px;
   margin-right: 15px;

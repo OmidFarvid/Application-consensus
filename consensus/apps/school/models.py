@@ -13,7 +13,7 @@ class School(models.Model):
     participants = models.ManyToManyField(
         User,
         through='Participation',
-        through_fields=('school', 'participant'),
+        through_fields=('school', 'user'),
         related_name="participants"
     )
     phone_number = models.CharField(max_length=255, null=True, blank=True)
@@ -53,7 +53,7 @@ class Participation(models.Model):
         (PARTICIPATION_STAFF, 'Staff'),
     )
     school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='participation')
-    participant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='participation')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='participation')
     participation_date = models.DateTimeField()
     participation_type = models.CharField('Participation', max_length=1, choices=PARTICIPATION_CHOICES)
 
