@@ -60,8 +60,10 @@ class InviteSerializer(serializers.ModelSerializer):
         model = models.Invite
 
     def create(self, validated_data):
-        invite = Invite.objects.update_or_create(id=self.initial_data['id'], defaults=validated_data)
-        return invite[0]
+        if id in self.initial_data:
+            return Invite.objects.update_or_create(id=self.initial_data['id'], defaults=validated_data)[0]
+        else:
+            return Invite.objects.create(**validated_data)
 
 
 class SeasonSerializer(serializers.ModelSerializer):

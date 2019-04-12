@@ -432,6 +432,12 @@ export default {
         function(resp) {
           self.resendingRecord = false;
           self.$refs.confirmResendModalRef.hide();
+          // Update current invite
+          self.inviteData.results.splice(
+            self.inviteData.results.indexOf(self.selectedInvite),
+            1,
+            resp.data.invite
+          );
           self.notifySuccess(
             (resp.data && resp.data.detail) || "The invitation resent"
           );
