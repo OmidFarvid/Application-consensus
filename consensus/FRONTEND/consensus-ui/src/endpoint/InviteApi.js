@@ -13,11 +13,16 @@ export default {
   delete(schoolId, invite) {
     return Api.delete(`school/${schoolId}/invite/${invite.id}`);
   },
-  acceptInviteUrl(schoolId, userId, token){
-    return `${Api.defaults.baseURL}/school/${schoolId}/invite/accept?userId=${userId}&token=${token}`;
+  acceptInviteUrl(schoolId, userId, token) {
+    return `${
+      Api.defaults.baseURL
+    }/school/${schoolId}/invite/accept?userId=${userId}&token=${token}`;
   },
   resend(schoolId, invite) {
-    return Api.resend(`school/${schoolId}/invite/${invite.id}`);
+    return Api.put(
+      `school/${schoolId}/invite/resend?inviteId=${invite.id}`,
+      invite
+    );
   }
 
 };

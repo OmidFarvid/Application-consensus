@@ -58,17 +58,11 @@
               <div class="col-md-6 col-sm-6 col-xs-6">
                 <div class="form-group">
                   <label class="pull-left">Country</label>
-                 <select
-                        class="form-control select"
-                        v-model="school.country"
-                      >
-                        <option
-                          v-for="country in countries"
-                          v-bind:key="country"
-                        >
-                          {{ country }}
-                        </option>
-                      </select>
+                  <select class="form-control select" v-model="school.country">
+                    <option v-for="country in countries" v-bind:key="country">
+                      {{ country }}
+                    </option>
+                  </select>
                 </div>
               </div>
               <div class="col-md-6 col-sm-6 col-xs-6">
@@ -86,19 +80,14 @@
               <div class="col-md-6 col-sm-6 col-xs-6">
                 <div class="form-group">
                   <label class="pull-left">City</label>
-                 <select
-                        class="form-control select"
-                        v-model="school.city"
-                      >
-                        <option
-                          v-for="city in countriesWithCities[
-                            school.country
-                          ]"
-                          v-bind:key="city"
-                        >
-                          {{ city }}
-                        </option>
-                      </select>
+                  <select class="form-control select" v-model="school.city">
+                    <option
+                      v-for="city in countriesWithCities[school.country]"
+                      v-bind:key="city"
+                    >
+                      {{ city }}
+                    </option>
+                  </select>
                 </div>
               </div>
               <div class="col-md-6 col-sm-6 col-xs-6">
@@ -180,7 +169,7 @@ export default {
           self.$router.back();
         }
       );
-    };
+    }
     this.getCountries();
   },
   destroyed: function() {},

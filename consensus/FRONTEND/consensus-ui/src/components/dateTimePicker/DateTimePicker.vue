@@ -157,7 +157,6 @@ export default {
         (value && momentValue.format(comparatorFormat)) !==
         (this.value && oldMomentValue.format(comparatorFormat))
       ) {
-        debugger;
         value = value && momentValue.format(comparatorFormat);
         this.$emit("input", value);
       }

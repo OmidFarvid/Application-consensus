@@ -2,7 +2,8 @@ import datetime
 import re
 from django.core import signing
 from apps.school.models import School, Application, Review, Season, Staff, Participation, Invite, User
-from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ReviewSerializer, SeasonSerializer, \
+from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ReviewSerializer, \
+    SeasonSerializer, \
     StaffSerializer, InviteSerializer
 from django.core.mail import send_mail
 from django.db.models import Q
@@ -86,7 +87,7 @@ class SchoolView(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # All schools that the current user has participation with them
-        return self.queryset.filter(participation__user=self.request.user.id)
+        return self.queryset.filter(participation__user=self.request.user.id).prefetch_related('participants')
 
     def perform_update(self, serializer):
         # If the current user is the owner of the given school
@@ -204,7 +205,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
         if not participation:
             raise PermissionDenied
 
-        # If the username or email already invited
+        # If no username or email provided
         invite_by_email_and_username = None
         if request.data.get('email', None) and request.data.get('username', None):
             invite_by_email_and_username = Invite.objects.filter(
@@ -223,6 +224,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # If the username or email already invited
         invite = invite_by_email_and_username.first()
         if invite:
             return Response(
@@ -282,18 +284,18 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
 
         if user:
             # If the user exists send accept invite email
-            # send_mail(
-            #     "You are invited!",
-            #     "{}/{}/{}/{}/{}?userId={}&token={}".format(
-            #         "{}/{}/{}".format(request.get_host(), API_PREFIX, DEFAULT_VERSION),
-            #         "school",
-            #         self.base_school_id,
-            #         "invite",
-            #         "accept",
-            #         user.id,
-            #         signing.dumps({'inviteId': invite.id}),
-            #     ),
-            #     "Consensus Admin <from@example.com>", ["{}".format(user.email)])
+            send_mail(
+                "You are invited!",
+                "{}/{}/{}/{}/{}?userId={}&token={}".format(
+                    "{}/{}/{}".format(request.get_host(), API_PREFIX, DEFAULT_VERSION),
+                    "school",
+                    self.base_school_id,
+                    "invite",
+                    "accept",
+                    user.id,
+                    signing.dumps({'inviteId': invite.id}),
+                ),
+                "Consensus Admin <from@example.com>", ["{}".format(user.email)])
             detail = 'The invitation email successfully sent'
         else:
             # If the user does not exist, send signUp email
@@ -357,7 +359,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             invite.acceptation_date = now
             invite.save()
 
-            # Createï¿½aï¿½new staff and make participation with the school
+            # Create a new staff and make participation with the school
             Staff.objects.create(user=user,
                                  first_name=user.first_name,
                                  last_name=user.last_name,
@@ -371,9 +373,9 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                                          participation_date=now)
             # TODO: redirect to signIn page
             return redirect("{}/#/{}".format(
-                    "http://localhost:8080",  # request.get_host(),
-                    "signIn",
-                ))
+                "http://localhost:8080",  # request.get_host(),
+                "signIn",
+            ))
 
         else:
             return Response(
@@ -383,9 +385,52 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['GET'])
-    def resend(self, instance):
-        return True
+    @action(detail=False, methods=['PUT'])
+    def resend(self, request, *token, **kwargs):
+        # If the current user is the owner of the given school
+        participation = self.get_school_participation()
+        if not participation:
+            raise PermissionDenied
+
+        # If no username or email provided
+        invite_by_email_and_username = None
+        if request.data.get('email', None) and request.data.get('username', None):
+            invite_by_email_and_username = Invite.objects.filter(
+                Q(email=request.data.get('email')) & Q(username=request.data.get('username'))
+            )
+        elif request.data.get('email', None):
+            invite_by_email_and_username = Invite.objects.filter(email=request.data.get('email'))
+        elif request.data.get('username', None):
+            invite_by_email_and_username = Invite.objects.filter(username=request.data.get('username'))
+        else:
+            return Response(
+                {
+                    'detail': 'No username or email provided',
+                    'success': False
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # If the username or email already invited, resend the email again
+        invite = invite_by_email_and_username.first()
+        if invite:
+            if invite.status == Invite.INVITATION_ACCEPT:
+                return Response(
+                    {
+                        'detail': 'The user already accept invitation',
+                        'success': False
+                    },
+                    status=status.HTTP_409_CONFLICT
+                )
+            return self.invite_user(request)
+        else:
+            return Response(
+                {
+                    'detail': 'The user does not invited yet',
+                    'success': False
+                },
+                status=status.HTTP_409_CONFLICT
+            )
 
 
 class SeasonView(SchoolBasedViewMixin, viewsets.ModelViewSet):
@@ -506,7 +551,7 @@ class ReviewView(ApplicationBasedViewMixin, viewsets.ModelViewSet):
         # If the current user has participation with the given school
         participation = Participation.objects.filter(
             school=self.base_application.season.school,
-            participant=self.request.user
+            user=self.request.user
         ).first()
         if not participation:
             raise PermissionDenied
@@ -518,7 +563,7 @@ class ReviewView(ApplicationBasedViewMixin, viewsets.ModelViewSet):
         # If the current user has participation with the given school
         participation = Participation.objects.filter(
             school=self.base_application.season.school,
-            participant=self.request.user
+            user=self.request.user
         ).first()
         if participation:
             # If the current user already reviewed this application
@@ -537,7 +582,7 @@ class ReviewView(ApplicationBasedViewMixin, viewsets.ModelViewSet):
         # If the current user has participation with the given school
         participation = Participation.objects.filter(
             school=self.base_application.season.school,
-            participant=self.request.user
+            user=self.request.user
         ).first()
         if participation:
             serializer.save()
@@ -548,7 +593,7 @@ class ReviewView(ApplicationBasedViewMixin, viewsets.ModelViewSet):
         # If the current user has participation with the given school
         participation = Participation.objects.filter(
             school=self.base_application.season.school,
-            participant=self.request.user
+            user=self.request.user
         ).first()
         if participation:
             instance.delete()

@@ -1,27 +1,21 @@
 <template>
     <section class="container-fluid">
         <div class="row row-no-padding justify-content-end">
-            <div class="col-md-4 col-sm-4 col-xs-4">
-                <div class="row">
-                    <div class="col-12">
-                        <button
-                                class="btn btn-block btn-success"
-                                @click="showNewApplicationModal()"
-                        >
-                            <i class="glyphicon glyphicon-ok"></i> Submit a new application
-                        </button>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <button
-                                class="btn btn-block btn-info"
-                                @click="uploadNewApplicationsModal()"
-                        >
-                            <i class="glyphicon glyphicon-ok"></i> Upload new applications
-                        </button>
-                    </div>
-                </div>
+            <div class="col-md-3 col-sm-3 col-xs-3">
+                <button
+                        class="btn btn-block btn-success"
+                        @click="showNewApplicationModal()"
+                >
+                    <i class="glyphicon glyphicon-ok"></i> Submit a new application
+                </button>
+            </div>
+            <div class="col-md-3 col-sm-3 col-xs-3">
+                <button
+                        class="btn btn-block btn-info"
+                        @click="uploadNewApplicationsModal()"
+                >
+                    <i class="glyphicon glyphicon-ok"></i> Upload applications
+                </button>
             </div>
         </div>
         <div class="row row-no-padding">
@@ -494,7 +488,6 @@
                     </div>
                 </div>
             </div>
-
         </b-modal>
     </section>
 </template>
@@ -649,7 +642,8 @@
                     },
                     reviewActionField,
                     decisionActionField
-                ]
+                ],
+                fileLoaded: false,
             };
         },
         methods: {
@@ -670,15 +664,18 @@
                 self.season.applicationEnrolled = 0;
                 self.season.newApplication = 0;
                 self.season.newEnrolled = 0;
-                applicationApi.getBySeasonId(this.seasonId).then(function (response) {
-                    self.seasonData = response.data;
-                    self.fragmentationApplication(response.data.results);
-                }, function (resp) {
-                    self.notifyError(
-                        (resp.response && resp.response.data.detail) ||
-                        "Some error happened when trying to get application"
-                    );
-                });
+                applicationApi.getBySeasonId(this.seasonId).then(
+                    function (response) {
+                        self.seasonData = response.data;
+                        self.fragmentationApplication(response.data.results);
+                    },
+                    function (resp) {
+                        self.notifyError(
+                            (resp.response && resp.response.data.detail) ||
+                            "Some error happened when trying to get application"
+                        );
+                    }
+                );
             },
             fragmentationApplication: function (applications) {
                 let self = this;
@@ -810,16 +807,17 @@
                             self.selectedReview = reviews[0];
                         }
                         self.$refs.reviewAppModalRef.show();
-                    }, function (resp) {
+                    },
+                    function (resp) {
                         self.notifyError(
                             (resp.response && resp.response.data.detail) ||
                             "Some error happened when trying to get reviewers"
                         );
-                    });
-
+                    }
+                );
             },
             selectScore: function (score) {
-                this.$set(this.selectedReview, 'score', score);
+                this.$set(this.selectedReview, "score", score);
             },
             submitReview: function () {
                 let self = this;

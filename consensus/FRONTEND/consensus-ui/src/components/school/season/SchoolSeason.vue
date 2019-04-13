@@ -54,22 +54,20 @@
                 params: { school_id: schoolId, season_id: props.rowData.id }
               }"
             >
-              <span class="fa fa-eye"></span>
-            </router-link>
-            &nbsp;&nbsp;
+              <span class="fa fa-eye"></span> </router-link
+            >&nbsp;
             <button
               class="btn btn-warning btn-sm"
               @click="editRow(props.rowData)"
             >
               <span class="glyphicon glyphicon-pencil"></span></button
-            >&nbsp;&nbsp;
+            >&nbsp;
             <button
               class="btn btn-danger btn-sm"
               @click="showConfirmDeleteModal(props.rowData)"
             >
               <span class="glyphicon glyphicon-trash"></span></button
-            >
-
+            >&nbsp;
           </div>
         </template>
       </vuetable>
@@ -355,10 +353,11 @@ export default {
           self.$refs.vuetable.refresh();
           self.notifySuccess("The school deleted");
         },
-        function() {
+        function(resp) {
           self.deletingRecord = false;
           self.notifyError(
-            "Some error happened when trying to delete the season"
+            (resp.response && resp.response.data.detail) ||
+              "Some error happened when trying to delete the season"
           );
         }
       );
@@ -381,9 +380,10 @@ export default {
             self.$refs.newSeasonModalRef.hide();
             self.seasonData.results.push(resp.data);
           },
-          function() {
+          function(resp) {
             self.notifyError(
-              "Some error happened when trying to add the new season"
+              (resp.response && resp.response.data.detail) ||
+                "Some error happened when trying to add the new season"
             );
           }
         );
@@ -393,9 +393,10 @@ export default {
             self.notifySuccess("The season updated");
             self.$refs.newSeasonModalRef.hide();
           },
-          function() {
+          function(resp) {
             self.notifyError(
-              "Some error happened when trying to update the new season"
+              (resp.response && resp.response.data.detail) ||
+                "Some error happened when trying to update the new season"
             );
           }
         );

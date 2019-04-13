@@ -4,7 +4,6 @@
       <div class="col">
         <school-season v-bind:schoolId="schoolId"></school-season>
         <school-staff v-bind:schoolId="schoolId"></school-staff>
-        <school-invite v-bind:schoolId="schoolId"></school-invite>
       </div>
     </div>
   </section>
@@ -18,7 +17,6 @@ import VuetableBootstrapMixin from "../../mixins/VuetableBootstrapMixin";
 import bModal from "bootstrap-vue/es/components/modal/modal";
 import SchoolStaff from "./SchoolStaff";
 import SchoolSeason from "./season/SchoolSeason";
-import SchoolInvite from "./SchoolInvite";
 
 export default {
   name: "SchoolHome",
@@ -27,7 +25,6 @@ export default {
     Vuetable,
     SchoolStaff,
     SchoolSeason,
-    SchoolInvite,
     VuetablePagination,
     "b-modal": bModal
   },
