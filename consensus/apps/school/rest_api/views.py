@@ -359,7 +359,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             invite.acceptation_date = now
             invite.save()
 
-            # Create�a�new staff and make participation with the school
+            # Create a new staff and make participation with the school
             Staff.objects.create(user=user,
                                  first_name=user.first_name,
                                  last_name=user.last_name,
