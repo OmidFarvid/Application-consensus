@@ -167,9 +167,12 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-1" v-for="index in 8" :key="index">
+                                <div class="fieldSelector" v-for="index in 8" :key="index">
                                     <select ref="fieldSelector" :id="'fieldSelector' + index" @change="refreshFieldSelectors">
-                                        <option v-if="!field.selected || this.$refs.fieldSelector[index].selectedIndex==index" v-for="field in applicationFields" v-bind:key="field.name">
+                                        <option>
+                                            ...
+                                        </option>
+                                        <option v-if="!field.selected || index==field.selectedIndex+1" v-for="field in applicationFields" v-bind:key="field.name">
                                             {{field.name}}
                                         </option>
                                     </select>
@@ -545,14 +548,14 @@
                     newApplication: 0
                 },
                 applicationFields: [
-                    {name: "1",index:1, selected: false},
-                    {name: "2",index:2, selected: false},
-                    {name: "3",index:3, selected: false},
-                    {name: "4",index:4, selected: false},
-                    {name: "5",index:5, selected: false},
-                    {name: "6",index:6, selected: false},
-                    {name: "7",index:7, selected: false},
-                    {name: "8",index:8, selected: false},
+                    {name: "First Name",index:1,selectedIndex:-1, selected: false},
+                    {name: "Last Name",index:2,selectedIndex:-1, selected: false},
+                    {name: "Birth Date",index:3,selectedIndex:-1, selected: false},
+                    {name: "Gender",index:4,selectedIndex:-1, selected: false},
+                    {name: "Phone Number",index:5,selectedIndex:-1, selected: false},
+                    {name: "Email",index:6,selectedIndex:-1, selected: false},
+                    {name: "Info",index:7,selectedIndex:-1, selected: false},
+                    {name: "Educational Info",index:8,selectedIndex:-1, selected: false},
                 ],
                 scores: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                 selectedReview: {},
@@ -852,21 +855,26 @@
             },
             changeSelectedFields(e){
                 console.log(e.target.selectedOptions[0].text);
+                console.log(e);
+                debugger;
+                console.log(e.target.id.substring("fieldSelector".length,e.target.id.length));
             },
             refreshFieldSelectors: function(){
                 let self = this;
                 let selectors = self.$refs.fieldSelector;
                 let applicationFields = self.applicationFields;
-                debugger;
+                applicationFields.forEach(function(applicationField) {
+                    applicationField.selected = false;
+                    applicationField.selectedIndex=-1;
+                })
                 selectors.forEach(function(selector,index){
+                    let selectedText = selectors[index].options[selectors[index].selectedIndex].text;
                     applicationFields.forEach(function(applicationField){
                         {
-                            let selectedText = selectors[index].options[selectors[index].selectedIndex].text;
                             if (applicationField.name == selectedText) {
-                                console.log(applicationField);
                                 applicationField.selected=true;
+                                applicationField.selectedIndex=index;
                             }
-
                         }
                     });
                     });
@@ -951,5 +959,10 @@
     #dvCSV {
         max-height: 400px;
         overflow: scroll;
+    }
+
+    .fieldSelector{
+        width: 12%;
+        font-size: small;
     }
 </style>
