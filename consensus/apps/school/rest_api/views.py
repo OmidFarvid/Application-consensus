@@ -359,7 +359,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             invite.acceptation_date = now
             invite.save()
 
-            # Create a new staff and make participation with the school
+            # Createï¿½aï¿½new staff and make participation with the school
             Staff.objects.create(user=user,
                                  first_name=user.first_name,
                                  last_name=user.last_name,
@@ -538,6 +538,10 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
             instance.delete()
         else:
             raise PermissionDenied
+
+    @action(detail=False, methods=['POST'])
+    def upload_csv(self, request, *token, **kwargs):
+        return Response()
 
 
 class ReviewView(ApplicationBasedViewMixin, viewsets.ModelViewSet):
