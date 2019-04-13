@@ -14,7 +14,7 @@ class School(models.Model):
         User,
         through='Participation',
         through_fields=('school', 'user'),
-        related_name="users"
+        related_name="participants"
     )
     phone_number = models.CharField(max_length=255, null=True, blank=True)
     email = models.CharField(max_length=255, null=True, blank=True)

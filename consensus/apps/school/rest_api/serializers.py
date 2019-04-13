@@ -5,7 +5,6 @@ import datetime
 
 
 class SchoolSerializer(serializers.ModelSerializer):
-
     staff_count = serializers.SerializerMethodField()
     season_count = serializers.SerializerMethodField()
     application_count = serializers.SerializerMethodField()
@@ -28,6 +27,11 @@ class SchoolSerializer(serializers.ModelSerializer):
     def get_application_count(school):
         return Application.objects.filter(season__school=school).count()
 
+    @staticmethod
+    def get_participant_status(school):
+        return Participation.objects.values_list('user', 'participation_type') \
+            .filter(school=school, user=1).all()
+
     # Use this method for get current user
     def get_current_user(self, obj):
         kwargs = getattr(self, '_kwargs', None)
@@ -42,7 +46,7 @@ class SchoolSerializer(serializers.ModelSerializer):
         school = School.objects.create(**validated_data)
         Participation.objects.create(
             school=school,
-            participant=self.get_current_user(self),
+            user=self.get_current_user(self),
             participation_type=Participation.PARTICIPATION_OWNER,
             participation_date=datetime.datetime.now()
         )
@@ -60,6 +64,12 @@ class InviteSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = models.Invite
 
+    def create(self, validated_data):
+        if id in self.initial_data:
+            return Invite.objects.update_or_create(id=self.initial_data['id'], defaults=validated_data)[0]
+        else:
+            return Invite.objects.create(**validated_data)
+
 
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -74,7 +84,6 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-
     reviewer_full_name = serializers.SerializerMethodField()
 
     @staticmethod
