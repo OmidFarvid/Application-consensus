@@ -1,8 +1,7 @@
 import time
 
-from django.conf import settings
 from django.core import signing
-from django.core.signing import TimestampSigner, Signer
+from django.core.signing import Signer
 from django.http import Http404
 from django.utils import baseconv
 

@@ -19,7 +19,8 @@ export default {
   uploadCsv(seasonId, formData) {
     return Api.post(`season/${seasonId}/application/upload_csv`, formData, {
       headers: {
-        "Content-Type": "multipart/form-data"
+        "Content-Type": "multipart/form-data",
+        enctype: "multipart/form-data"
       }
     });
   }

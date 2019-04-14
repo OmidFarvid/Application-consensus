@@ -177,8 +177,14 @@
                           :key="index"
                         >
                           <select v-model="matchedApplicationColumn[index]">
+                            <option value="empty">Select ...</option>
                             <option
                               v-for="field in applicationFields"
+                              v-if="
+                                (matchedApplicationColumn[index] &&
+                                  matchedApplicationColumn[index] === field) ||
+                                  matchedApplicationColumn.indexOf(field) === -1
+                              "
                               :key="field.index"
                               :value="field"
                             >
@@ -606,19 +612,14 @@ export default {
         newApplication: 0
       },
       applicationFields: [
-        { name: "First Name", index: 1, selectedIndex: -1, selected: false },
-        { name: "Last Name", index: 2, selectedIndex: -1, selected: false },
-        { name: "Birth Date", index: 3, selectedIndex: -1, selected: false },
-        { name: "Gender", index: 4, selectedIndex: -1, selected: false },
-        { name: "Phone Number", index: 5, selectedIndex: -1, selected: false },
-        { name: "Email", index: 6, selectedIndex: -1, selected: false },
-        { name: "Info", index: 7, selectedIndex: -1, selected: false },
-        {
-          name: "Educational Info",
-          index: 8,
-          selectedIndex: -1,
-          selected: false
-        }
+        { name: "First Name", index: 1 },
+        { name: "Last Name", index: 2 },
+        { name: "Birth Date", index: 3 },
+        { name: "Gender", index: 4 },
+        { name: "Phone Number", index: 5 },
+        { name: "Email", index: 6 },
+        { name: "Info", index: 7 },
+        { name: "Educational Info", index: 8 }
       ],
       matchedApplicationColumn: [],
       csvFile: {
@@ -722,7 +723,6 @@ export default {
   },
   methods: {
     showNewApplicationModal: function() {
-      debugger;
       this.selectedApplication = {};
       this.$refs.newApplicationModalRef.show();
     },
@@ -945,9 +945,11 @@ export default {
                 let cells = rows[i].split(",");
                 if (cells.length > 1) {
                   for (let j = 0; j < cells.length; j++) {
+                    // The first row is expected as the column
                     if (i === 0) {
                       self.csvFile.columns.push(cells[j]);
                     } else {
+                      // Add a new row if not exists
                       let row = self.csvFile.rows[i - 1] || {};
                       if (self.csvFile.rows[i - 1] === undefined) {
                         self.csvFile.rows.push(row);
@@ -958,7 +960,7 @@ export default {
                 }
               }
 
-              // Todo: Add fake row
+              // Todo: Add a not_ended(more) row
             } catch (e) {
               self.csvFile = {
                 columns: [],
@@ -984,6 +986,10 @@ export default {
       }
       let formData = new FormData();
       formData.append("file", this.$refs.fileUploadRef.files[0]);
+      formData.append(
+        "matchedApplicationColumn",
+        JSON.stringify(this.matchedApplicationColumn)
+      );
       applicationApi.uploadCsv(this.seasonId, formData).then(function(resp) {
         console.log(resp);
       });
