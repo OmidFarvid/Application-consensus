@@ -33,3 +33,8 @@ http://dev.application.heteroskedastic.com
 1. npm install # (skip this if you installed once)
 1. npm run serve
 
+## steps to run end to end test
+1. cd consensus/FRONTEND/consensus-ui
+2. npm i --dev
+3. ./node_modules/.bin/cypress open
+4. select and run tests in the INTEGRATION TESTS

@@ -1,4 +1,6 @@
 import datetime
+import errno
+import os
 import re
 from django.core import signing
 from apps.school.models import School, Application, Review, Season, Staff, Participation, Invite, User
@@ -359,7 +361,7 @@ class InviteView(SchoolBasedViewMixin, viewsets.ModelViewSet):
             invite.acceptation_date = now
             invite.save()
 
-            # Create a new staff and make participation with the school
+            # Create a new staff and make participation with the school
             Staff.objects.create(user=user,
                                  first_name=user.first_name,
                                  last_name=user.last_name,
@@ -538,6 +540,51 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
             instance.delete()
         else:
             raise PermissionDenied
+
+    @action(detail=False, methods=['POST'])
+    def upload_csv(self, request, *token, **kwargs):
+        # If file not exists in the request
+        if 'file' not in request.FILES or not request.FILES['file'].name.endswith('.csv'):
+            return Response(
+                {
+                    'detail': 'Invalid file received',
+                    'success': False
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        # If matched column not exists in the request
+        if 'matchedApplicationColumn' not in request.data:
+            return Response(
+                {
+                    'detail': 'Invalid matched column received',
+                    'success': False
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        file = request.FILES['file']
+        file_name = './uploaded/' + file.name
+        # Create directory if not exists
+        if not os.path.exists(os.path.dirname(file_name)):
+            try:
+                os.makedirs(os.path.dirname(file_name))
+            except OSError as exc:
+                # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+        # Write received file into the disk
+        with open(file_name, 'wb+') as destination:
+            for chunk in file.chunks():
+                destination.write(chunk)
+
+        matchedApplicationColumn = request.data['matchedApplicationColumn']
+        # TODO: insert applications based on matchedApplicationColumn
+
+        return Response(
+            {
+                'detail': 'filed uploaded',
+                'success': True
+            }, status=status.HTTP_201_CREATED)
 
 
 class ReviewView(ApplicationBasedViewMixin, viewsets.ModelViewSet):

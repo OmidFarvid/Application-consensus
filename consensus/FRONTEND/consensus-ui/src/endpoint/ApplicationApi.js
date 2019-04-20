@@ -16,7 +16,12 @@ export default {
   delete(seasonId, application) {
     return Api.delete(`season/${seasonId}/application/${application.id}`);
   },
-   get(id) {
-    return Api.get("application/" + id);
-  },
+  uploadCsv(seasonId, formData) {
+    return Api.post(`season/${seasonId}/application/upload_csv`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        enctype: "multipart/form-data"
+      }
+    });
+  }
 };
