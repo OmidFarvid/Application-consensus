@@ -2,11 +2,13 @@ import datetime
 import errno
 import os
 import re
+import json
 from django.core import signing
 from apps.school.models import School, Application, Review, Season, Staff, Participation, Invite, User
 from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ReviewSerializer, \
     SeasonSerializer, \
     StaffSerializer, InviteSerializer
+from datetime import datetime
 from django.core.mail import send_mail
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
@@ -576,10 +578,50 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
         with open(file_name, 'wb+') as destination:
             for chunk in file.chunks():
                 destination.write(chunk)
-
         matchedApplicationColumn = request.data['matchedApplicationColumn']
         # TODO: insert applications based on matchedApplicationColumn
-
+        rows = str(chunk).split('\\n')
+        apps=[]
+        for rowindex, row in enumerate(rows):
+            app = Application()
+            if rowindex>0 and rowindex<len(rows)-1:
+                try:
+                    for index, col in enumerate(json.loads(matchedApplicationColumn)):
+                        if col['actualName'] == 'first_name':
+                            app.first_name = (row.split(',')[index])
+                        if col['actualName'] == 'last_name':
+                            app.last_name = (row.split(',')[index])
+                        if col['actualName'] == 'birth_date':
+                            app.birth_date = datetime.strptime(row.split(',')[index],'%Y/%m/%d')
+                        if col['actualName'] == 'gender':
+                            app.gender = (row.split(',')[index])
+                        if col['actualName'] == 'phone_number':
+                            app.phone_number = (row.split(',')[index])
+                        if col['actualName'] == 'email':
+                            app.email = (row.split(',')[index])
+                        if col['actualName'] == 'info':
+                            app.info = (row.split(',')[index])
+                        if col['actualName'] == 'educational_info':
+                            app.educational_info = (row.split(',')[index])
+                    app.season=self.base_season
+                    apps.append(app)
+                except:
+                    return Response(
+                        {
+                            'detail': 'bad data',
+                            'success': False
+                        }, status=status.HTTP_400_BAD_REQUEST)
+        for app in apps:
+            new_app = Application.objects.create(first_name=app.first_name,
+                                                 last_name=app.last_name,
+                                                 gender=app.gender,
+                                                 email=app.email,
+                                                 phone_number=app.phone_number,
+                                                 birth_date=app.birth_date,
+                                                 info=app.info,
+                                                 educational_info=app.educational_info,
+                                                 season=app.season
+                                                 )
         return Response(
             {
                 'detail': 'filed uploaded',
