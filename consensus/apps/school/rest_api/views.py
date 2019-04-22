@@ -565,7 +565,7 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
             )
 
         file = request.FILES['file']
-        file_name = './uploaded/' + file.name
+        #file_name = './uploaded/' + file.name
         # Create directory if not exists
         uploaded_file = BulkApplicationFile()
         uploaded_file.user = self.request.user
@@ -573,22 +573,21 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
         uploaded_file.fileContent=file
         BulkApplicationFile.objects.create(user=uploaded_file.user, uploadDate=uploaded_file.uploadDate,fileContent=uploaded_file.fileContent)
         file_id = BulkApplicationFile.objects.filter(user=request.user).last().id
-        print('*****************************************************')
-        print(file_id)
-        if not os.path.exists(os.path.dirname(file_name)):
-            try:
-                os.makedirs(os.path.dirname(file_name))
-            except OSError as exc:
-                # Guard against race condition
-                if exc.errno != errno.EEXIST:
-                    raise
-        # Write received file into the disk
-        with open(file_name, 'wb+') as destination:
-            for chunk in file.chunks():
-                destination.write(chunk)
+
+        # if not os.path.exists(os.path.dirname(file_name)):
+        #     try:
+        #         os.makedirs(os.path.dirname(file_name))
+        #     except OSError as exc:
+        #         # Guard against race condition
+        #         if exc.errno != errno.EEXIST:
+        #             raise
+        # # Write received file into the disk
+        # with open(file_name, 'wb+') as destination:
+        #     for chunk in file.chunks():
+        #         destination.write(chunk)
         matchedApplicationColumn = request.data['matchedApplicationColumn']
         # TODO: insert applications based on matchedApplicationColumn
-        rows = str(chunk).split('\\n')
+        rows = str(file).split('\\n')
         apps=[]
         for rowindex, row in enumerate(rows):
             app = Application()
