@@ -83,6 +83,12 @@ class ApplicationSerializer(serializers.ModelSerializer):
         model = models.Application
 
 
+class BulkApplicationFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+        model = models.BulkApplicationFile
+
+
 class ReviewSerializer(serializers.ModelSerializer):
     reviewer_full_name = serializers.SerializerMethodField()
 

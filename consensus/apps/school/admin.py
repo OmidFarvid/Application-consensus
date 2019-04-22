@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from reversion.admin import VersionAdmin
-from apps.school.models import School, Application, Review, Season, Staff
+from apps.school.models import School, Application, Review, Season, Staff, BulkApplicationFile
 
 
 class SchoolInstanceAdmin(VersionAdmin):
@@ -11,6 +11,7 @@ class SchoolInstanceAdmin(VersionAdmin):
 
 admin.site.register(School, SchoolInstanceAdmin)
 admin.site.register(Application, VersionAdmin)
+admin.site.register(BulkApplicationFile, VersionAdmin)
 admin.site.register(Review, VersionAdmin)
 admin.site.register(Season, VersionAdmin)
 admin.site.register(Staff, VersionAdmin)

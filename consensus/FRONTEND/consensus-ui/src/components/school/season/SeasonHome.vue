@@ -669,7 +669,7 @@ export default {
           dataClass: "text-left"
         },
         {
-          name: "date_of_birth",
+          name: "birth_date",
           title: "Date of birth",
           titleClass: "text-left",
           dataClass: "text-left"

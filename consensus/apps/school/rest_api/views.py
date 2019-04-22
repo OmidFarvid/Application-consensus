@@ -4,7 +4,7 @@ import os
 import re
 import json
 from django.core import signing
-from apps.school.models import School, Application, Review, Season, Staff, Participation, Invite, User
+from apps.school.models import School, Application, Review, Season, Staff, Participation, Invite, User,BulkApplicationFile
 from apps.school.rest_api.serializers import SchoolSerializer, ApplicationSerializer, ReviewSerializer, \
     SeasonSerializer, \
     StaffSerializer, InviteSerializer
@@ -567,6 +567,14 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
         file = request.FILES['file']
         file_name = './uploaded/' + file.name
         # Create directory if not exists
+        uploaded_file = BulkApplicationFile()
+        uploaded_file.user = self.request.user
+        uploaded_file.uploadDate=datetime.now()
+        uploaded_file.fileContent=file
+        BulkApplicationFile.objects.create(user=uploaded_file.user, uploadDate=uploaded_file.uploadDate,fileContent=uploaded_file.fileContent)
+        file_id = BulkApplicationFile.objects.filter(user=request.user).last().id
+        print('*****************************************************')
+        print(file_id)
         if not os.path.exists(os.path.dirname(file_name)):
             try:
                 os.makedirs(os.path.dirname(file_name))
@@ -612,7 +620,7 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
                             'success': False
                         }, status=status.HTTP_400_BAD_REQUEST)
         for app in apps:
-            new_app = Application.objects.create(first_name=app.first_name,
+            Application.objects.create(first_name=app.first_name,
                                                  last_name=app.last_name,
                                                  gender=app.gender,
                                                  email=app.email,
@@ -622,11 +630,19 @@ class ApplicationView(SeasonBasedViewMixin, viewsets.ModelViewSet):
                                                  educational_info=app.educational_info,
                                                  season=app.season
                                                  )
+        BulkApplicationFile.objects.filter(id=file_id).update(success=True)
         return Response(
             {
                 'detail': 'filed uploaded',
                 'success': True
             }, status=status.HTTP_201_CREATED)
+
+
+class BulkApplicationFileView(SeasonBasedViewMixin, viewsets.ModelViewSet):
+    queryset = Application.objects.all()
+    serializer_class = ApplicationSerializer
+    ordering = 'uploadDate'
+    ordering_fields = '__all__'
 
 
 class ReviewView(ApplicationBasedViewMixin, viewsets.ModelViewSet):
