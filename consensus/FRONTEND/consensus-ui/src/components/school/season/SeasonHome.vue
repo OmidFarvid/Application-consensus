@@ -612,14 +612,14 @@ export default {
         newApplication: 0
       },
       applicationFields: [
-        { name: "First Name", index: 1 },
-        { name: "Last Name", index: 2 },
-        { name: "Birth Date", index: 3 },
-        { name: "Gender", index: 4 },
-        { name: "Phone Number", index: 5 },
-        { name: "Email", index: 6 },
-        { name: "Info", index: 7 },
-        { name: "Educational Info", index: 8 }
+        { name: "First Name", actualName: "first_name", index: 1 },
+        { name: "Last Name", actualName: "last_name", index: 2 },
+        { name: "Birth Date", actualName: "birth_date", index: 3 },
+        { name: "Gender", actualName: "gender", index: 4 },
+        { name: "Phone Number", actualName: "phone_number", index: 5 },
+        { name: "Email", actualName: "email", index: 6 },
+        { name: "Info", actualName: "info", index: 7 },
+        { name: "Educational Info", actualName: "educational_info", index: 8 }
       ],
       matchedApplicationColumn: [],
       csvFile: {

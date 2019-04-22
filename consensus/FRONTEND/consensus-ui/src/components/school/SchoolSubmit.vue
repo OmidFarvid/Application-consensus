@@ -2,7 +2,7 @@
   <section class="container">
     <div class="row row-no-padding">
       <div class="col-md-10 col-sm-10 col-xs-12 offset-1">
-        <div class="main-div">
+        <div class="main-div" id="register_school">
           <h6 class="modal-title">Register a New School</h6>
           <hr />
           <form @submit.prevent="submitSchool">
@@ -11,6 +11,7 @@
                 <div class="form-group">
                   <label class="pull-left">School Name</label>
                   <input
+                    id="school_name"
                     type="text"
                     class="form-control"
                     placeholder="pic a name"
@@ -117,12 +118,17 @@
             <hr />
             <div class="row row-no-padding width-full">
               <div class="col-md-4 col-sm-4 col-xs-12">
-                <button type="Submit" class="btn btn-success btn-block">
+                <button
+                  id="submit_school"
+                  type="Submit"
+                  class="btn btn-success btn-block"
+                >
                   <i class="glyphicon glyphicon-ok"></i> Submit School
                 </button>
               </div>
               <div class="col-md-3 col-sm-3 col-xs-12">
                 <router-link
+                  id="cancel"
                   class="btn btn-block btn-danger"
                   :to="{ name: 'schools' }"
                 >

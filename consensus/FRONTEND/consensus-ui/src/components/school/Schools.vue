@@ -6,7 +6,7 @@
           class="btn btn-block btn-info"
           :to="{ name: 'school.add' }"
         >
-          <i class="fa fa-plus"></i> Add a new School
+          <i id="add_new_school" class="fa fa-plus"></i> Add a new School
         </router-link>
       </div>
     </div>
